@@ -385,6 +385,31 @@ install_graphify() {
     log_ok "Graphify installed"
 }
 
+install_obsidian() {
+    if command_exists obsidian; then
+        log_ok "Obsidian already installed"
+        return
+    fi
+    log_info "Installing Obsidian..."
+    local install_dir="$HOME/.local/bin"
+    mkdir -p "$install_dir"
+    local appimage="$install_dir/Obsidian.AppImage"
+    if [[ -f "$appimage" ]]; then
+        log_ok "Obsidian AppImage already exists"
+        return
+    fi
+    local latest_url
+    latest_url=$(curl -fsSL https://api.github.com/repos/obsidianmd/obsidian-releases/releases/latest | \
+        grep -oP '"browser_download_url":.*obsidian.*\.AppImage' | head -1 | cut -d'"' -f4)
+    if [[ -z "$latest_url" ]]; then
+        log_warn "Could not find Obsidian AppImage URL. Install manually."
+        return
+    fi
+    curl -fsSL "$latest_url" -o "$appimage"
+    chmod +x "$appimage"
+    log_ok "Obsidian installed to $appimage"
+}
+
 install_cli_tools() {
     log_info "Installing essential CLI tools..."
     local tools=(
@@ -489,6 +514,7 @@ main() {
     install_gemini_cli
     install_opencode
     install_graphify
+    install_obsidian
     install_cli_tools
     install_nerd_font
     symlink_dotfiles
