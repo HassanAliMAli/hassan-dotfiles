@@ -132,17 +132,14 @@ install_ghostty() {
     fi
     log_info "Installing Ghostty..."
 
-    local codename
-    codename=$(. /etc/os-release && echo "$VERSION_CODENAME")
-
-    if [[ "$codename" == "oracular" || "$codename" == "plucky" ]]; then
-        sudo apt install -y ghostty
-    else
+    # Ghostty is in the Ubuntu repos starting with oracular (24.10).
+    # On older releases, install from the PPA.
+    sudo apt install -y ghostty 2>/dev/null || {
         sudo apt install -y software-properties-common
         sudo add-apt-repository -y ppa:ghostty/stable
         sudo apt update -y
         sudo apt install -y ghostty
-    fi
+    }
     log_ok "Ghostty installed"
 }
 
@@ -172,7 +169,7 @@ install_neovim() {
             local major minor
             major=$(echo "$nvim_version" | cut -d. -f1)
             minor=$(echo "$nvim_version" | cut -d. -f2)
-            if (( major > 0 || minor >= 11 )); then
+            if [[ -z "$major" || -z "$minor" ]] || (( major > 0 || minor >= 11 )); then
                 log_ok "Neovim already installed ($nvim_version — meets LazyVim requirement >= 0.11.2)"
                 return
             fi
@@ -241,7 +238,7 @@ install_vscode() {
     local keyring="/etc/apt/keyrings/packages.microsoft.gpg"
     curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | \
         gpg --dearmor | sudo tee "$keyring" > /dev/null
-    echo "deb [arch=amd64 signed-by=$keyring] https://packages.microsoft.com/repos/code stable main" | \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=$keyring] https://packages.microsoft.com/repos/code stable main" | \
         sudo tee /etc/apt/sources.list.d/vscode.list
     sudo apt update -y
     sudo apt install -y code
@@ -306,7 +303,7 @@ install_brave() {
     sudo rm -f /etc/apt/sources.list.d/brave-browser-release.list 2>/dev/null
     local keyring="/usr/share/keyrings/brave-browser-archive-keyring.gpg"
     sudo curl -fsSLo "$keyring" https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
-    echo "deb [signed-by=$keyring arch=amd64] https://brave-browser-apt-release.s3.brave.com/ stable main" | \
+    echo "deb [signed-by=$keyring arch=$(dpkg --print-architecture)] https://brave-browser-apt-release.s3.brave.com/ stable main" | \
         sudo tee /etc/apt/sources.list.d/brave-browser-release.list
     sudo apt update -y
     sudo apt install -y brave-browser
@@ -654,7 +651,12 @@ install_catppuccin_gtk() {
         return
     }
 
-    unzip -q "$temp_dir/theme.zip" -d "$temp_dir"
+    if ! unzip -q "$temp_dir/theme.zip" -d "$temp_dir"; then
+        log_warn "Could not extract Catppuccin GTK theme. Trying manual install..."
+        rm -rf "$temp_dir"
+        install_catppuccin_gtk_manual
+        return
+    fi
     # Find the extracted theme directory
     local extracted
     extracted=$(find "$temp_dir" -maxdepth 2 -name "gtk-4.0" -type d | head -1 | xargs dirname)
@@ -867,7 +869,7 @@ apply_system_dark_mode() {
 [Appearance]
 style=gtk2
 color_scheme=catppuccin_mocha
-icon_theme=Catppuccin
+# No Catppuccin icon theme exists; Qt5 falls back to the system default.
 EOF
         log_ok "Qt5 dark mode configured"
     fi
