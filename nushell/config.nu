@@ -854,16 +854,6 @@ $env.config = {
             mode: emacs
             event: { edit: capitalizechar }
         }
-        {
-            name: toggle_prompt
-            modifier: control
-            keycode: char_p
-            mode: [emacs, vi_normal, vi_insert]
-            event: {
-                send: executehostcommand
-                cmd: "toggle_prompt"
-            }
-        }
         # The following bindings with `*system` events require that Nushell has
         # been compiled with the `system-clipboard` feature.
         # This should be the case for Windows, macOS, and most Linux distributions

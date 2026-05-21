@@ -29,7 +29,6 @@ toggle_prompt() {
     fi
 }
 alias tp=toggle_prompt
-bindkey '^p' toggle_prompt
 
 # You may need to manually set your language environment
 export LANG=en_US.UTF-8
