@@ -55,7 +55,7 @@ def --env toggle_prompt [] {
         $env.PROMPT_MINIMAL = true
         $env.PROMPT_COMMAND = {|| create_minimal_prompt }
         $env.PROMPT_COMMAND_RIGHT = {|| "" }
-        print -e $"(ansi yellow)✓ Minimal prompt enabled (directory only)(ansi reset)"
+        print -e $"(ansi yellow)✓ Minimal prompt enabled \(directory only\)(ansi reset)"
     }
 }
 

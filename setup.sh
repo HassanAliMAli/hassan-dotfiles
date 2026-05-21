@@ -926,12 +926,12 @@ symlink_dotfiles() {
     # Zsh config to home directory (~/.zshrc)
     if [[ -f "$script_dir/zshrc/.zshrc" ]]; then
         if [[ -L "$HOME/.zshrc" ]]; then
-            ln -sf "../Desktop/coding/hassan-dotfiles/zshrc/.zshrc" "$HOME/.zshrc"
+            ln -sf "$script_dir/zshrc/.zshrc" "$HOME/.zshrc"
         elif [[ -f "$HOME/.zshrc" ]]; then
             mv "$HOME/.zshrc" "$HOME/.zshrc.bak.$(date +%s)"
-            ln -sf "../Desktop/coding/hassan-dotfiles/zshrc/.zshrc" "$HOME/.zshrc"
+            ln -sf "$script_dir/zshrc/.zshrc" "$HOME/.zshrc"
         else
-            ln -sf "../Desktop/coding/hassan-dotfiles/zshrc/.zshrc" "$HOME/.zshrc"
+            ln -sf "$script_dir/zshrc/.zshrc" "$HOME/.zshrc"
         fi
     fi
 
@@ -939,12 +939,12 @@ symlink_dotfiles() {
     if [[ -f "$script_dir/ssh/config" ]]; then
         mkdir -p "$HOME/.ssh"
         if [[ -L "$HOME/.ssh/config" ]]; then
-            ln -sf "../Desktop/coding/hassan-dotfiles/ssh/config" "$HOME/.ssh/config"
+            ln -sf "$script_dir/ssh/config" "$HOME/.ssh/config"
         elif [[ -f "$HOME/.ssh/config" ]]; then
             mv "$HOME/.ssh/config" "$HOME/.ssh/config.bak.$(date +%s)"
-            ln -sf "../Desktop/coding/hassan-dotfiles/ssh/config" "$HOME/.ssh/config"
+            ln -sf "$script_dir/ssh/config" "$HOME/.ssh/config"
         else
-            ln -sf "../Desktop/coding/hassan-dotfiles/ssh/config" "$HOME/.ssh/config"
+            ln -sf "$script_dir/ssh/config" "$HOME/.ssh/config"
         fi
     fi
 
