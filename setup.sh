@@ -443,6 +443,24 @@ install_cli_tools() {
     log_ok "CLI tools installed: ${missing[*]}"
 }
 
+install_power_tools() {
+    if ! command_exists uv; then
+        log_info "Installing uv..."
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        log_ok "uv installed"
+    else
+        log_ok "uv already installed"
+    fi
+
+    if ! command_exists pandoc; then
+        log_info "Installing Pandoc..."
+        sudo apt install -y pandoc
+        log_ok "Pandoc installed"
+    else
+        log_ok "Pandoc already installed"
+    fi
+}
+
 # =============================================================================
 # 19. Nerd Font (for icons in terminals/LazyVim)
 # =============================================================================
@@ -515,6 +533,7 @@ main() {
     install_opencode
     install_graphify
     install_obsidian
+    install_power_tools
     install_cli_tools
     install_nerd_font
     symlink_dotfiles
