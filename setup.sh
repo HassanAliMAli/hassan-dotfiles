@@ -246,6 +246,7 @@ install_vscode() {
         return
     fi
     log_info "Installing VSCode..."
+    sudo mkdir -p /etc/apt/keyrings
     local keyring="/etc/apt/keyrings/packages.microsoft.gpg"
     curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | \
         gpg --dearmor | sudo tee "$keyring" > /dev/null
@@ -309,6 +310,9 @@ install_brave() {
         return
     fi
     log_info "Installing Brave Browser..."
+    # Remove any existing Brave sources first to avoid duplicate warnings
+    sudo rm -f /etc/apt/sources.list.d/brave-browser-release.sources 2>/dev/null
+    sudo rm -f /etc/apt/sources.list.d/brave-browser-release.list 2>/dev/null
     local keyring="/usr/share/keyrings/brave-browser-archive-keyring.gpg"
     sudo curl -fsSLo "$keyring" https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
     echo "deb [signed-by=$keyring arch=amd64] https://brave-browser-apt-release.s3.brave.com/ stable main" | \
@@ -644,9 +648,9 @@ install_catppuccin_gtk() {
 
     local temp_dir
     temp_dir=$(mktemp -d)
-    curl -fsSL "https://github.com/catppuccin/gtk/releases/latest/download/catppuccin-mocha-lavender.zip" \
+    curl -fsSL "https://github.com/catppuccin/gtk/releases/latest/download/catppuccin-mocha-lavender-standard+default.zip" \
         -o "$temp_dir/theme.zip" 2>/dev/null || \
-    curl -fsSL "https://github.com/catppuccin/gtk/releases/latest/download/catppuccin-mocha-blue.zip" \
+    curl -fsSL "https://github.com/catppuccin/gtk/releases/latest/download/catppuccin-mocha-blue-standard+default.zip" \
         -o "$temp_dir/theme.zip" 2>/dev/null || {
         log_warn "Could not download Catppuccin GTK theme. Trying manual install..."
         rm -rf "$temp_dir"
@@ -680,35 +684,43 @@ install_catppuccin_gtk() {
 }
 
 install_catppuccin_gtk_manual() {
-    # Fallback: clone and build from source
-    log_info "Installing Catppuccin GTK from source..."
+    log_warn "The catppuccin/gtk repository has been archived."
+    log_info "Trying direct download with explicit URL..."
     local theme_dir="/usr/share/themes/Catppuccin-Mocha"
     if [[ -d "$theme_dir" ]]; then
         log_ok "Catppuccin GTK theme already exists"
         return
     fi
 
+    if ! command_exists unzip; then
+        sudo apt install -y unzip
+    fi
+
     local temp_dir
     temp_dir=$(mktemp -d)
-    git clone --depth 1 https://github.com/catppuccin/gtk.git "$temp_dir/gtk-theme" 2>/dev/null || {
-        log_warn "Could not clone Catppuccin GTK repo. Skipping GTK theme."
+    # Try with the known release zip URLs directly
+    curl -fsSL "https://github.com/catppuccin/gtk/releases/download/v1.0.3/catppuccin-mocha-lavender-standard+default.zip" \
+        -o "$temp_dir/theme.zip" 2>/dev/null || \
+    curl -fsSL "https://github.com/catppuccin/gtk/releases/download/v1.0.3/catppuccin-mocha-blue-standard+default.zip" \
+        -o "$temp_dir/theme.zip" 2>/dev/null || {
+        log_warn "Could not download Catppuccin GTK theme."
+        log_info "Install manually: download from https://github.com/catppuccin/gtk/releases/tag/v1.0.3"
         rm -rf "$temp_dir"
         return
     }
 
-    (
-        cd "$temp_dir/gtk-theme" || return
-        if command_exists meson; then
-            meson setup build --prefix=/usr -Dmocha=true -Dlavender=true -Daccents=blue 2>/dev/null && \
-                ninja -C build && sudo ninja -C build install 2>/dev/null && \
-                sudo mv /usr/share/themes/Catppuccin-Mocha-Lavender-Blue-Dark "$theme_dir" 2>/dev/null
-        else
-            sudo apt install -y meson sassc
-            meson setup build --prefix=/usr -Dmocha=true -Dlavender=true -Daccents=blue 2>/dev/null && \
-                ninja -C build && sudo ninja -C build install 2>/dev/null && \
-                sudo mv /usr/share/themes/Catppuccin-Mocha-Lavender-Blue-Dark "$theme_dir" 2>/dev/null
+    unzip -q "$temp_dir/theme.zip" -d "$temp_dir"
+    local extracted
+    extracted=$(find "$temp_dir" -maxdepth 2 -name "gtk-4.0" -type d | head -1 | xargs dirname)
+    if [[ -d "$extracted" ]]; then
+        sudo cp -r "$extracted" "$theme_dir"
+    else
+        local candidate
+        candidate=$(find "$temp_dir" -maxdepth 2 -name "index.theme" -type f | head -1 | xargs dirname)
+        if [[ -d "$candidate" ]]; then
+            sudo cp -r "$candidate" "$theme_dir"
         fi
-    )
+    fi
     rm -rf "$temp_dir"
 
     if command_exists gsettings; then
@@ -716,7 +728,7 @@ install_catppuccin_gtk_manual() {
         gsettings set org.gnome.desktop.interface color-scheme "prefer-dark" 2>/dev/null || true
     fi
 
-    log_ok "Catppuccin Mocha GTK theme installed (from source)"
+    log_ok "Catppuccin Mocha GTK theme installed (manual)"
 }
 
 # =============================================================================
