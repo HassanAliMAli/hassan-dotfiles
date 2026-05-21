@@ -59,15 +59,15 @@ alias .....="cd ../../../.."
 alias ......="cd ../../../../.."
 
 # GO
-export GOPATH='/Users/omerxx/go'
+export GOPATH=~/go
 
 # VIM
-alias v="/Users/omerxx/.nix-profile/bin/nvim"
+alias v="nvim"
 
 # Nmap
 alias nm="nmap -sC -sV -oN nmap"
 
-export PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/omer/.vimpkg/bin:${GOPATH}/bin:/Users/omerxx/.cargo/bin
+export PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:~/vimpkg/bin:${GOPATH}/bin:~/.cargo/bin
 
 alias cl='clear'
 
@@ -114,8 +114,6 @@ export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow'
 
 export PATH=/opt/homebrew/bin:$PATH
 
-alias mat='osascript -e "tell application \"System Events\" to key code 126 using {command down}" && tmux neww "cmatrix"'
-
 # Nix!
 export NIX_CONF_DIR=$HOME/.config/nix
 export PATH=/run/current-system/sw/bin:$PATH
@@ -149,7 +147,7 @@ fv() { nvim "$(find . -type f -not -path '*/.*' | fzf)" }
  fi
  # End Nix
 
-export XDG_CONFIG_HOME="/Users/omerxx/.config"
+export XDG_CONFIG_HOME=~/.config
 
 eval "$(zoxide init zsh)"
 eval "$(atuin init zsh)"
