@@ -7,7 +7,6 @@ return {
 	font_size = 16.0,
 	font = wezterm.font('JetBrains Mono'),
 	
-	-- window_background_image = '/Users/omerhamerman/Downloads/3840x1080-Wallpaper-041.jpg',
 	-- window_background_image_hsb = {
 	-- 	brightness = 0.01,
 	-- 	hue = 1.0,
