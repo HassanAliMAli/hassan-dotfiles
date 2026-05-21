@@ -461,6 +461,40 @@ install_power_tools() {
     fi
 }
 
+customize_gnome_terminal() {
+    if ! command_exists gsettings; then
+        log_warn "gsettings not found. Skipping GNOME Terminal customization."
+        return
+    fi
+    log_info "Applying Catppuccin Mocha to GNOME Terminal..."
+    sudo apt install -y dconf-cli 2>/dev/null || true
+
+    local profile_id
+    profile_id=$(dconf read /org/gnome/terminal/legacy/profiles:/default 2>/dev/null)
+    if [[ -z "$profile_id" ]]; then
+        profile_id=$(dconf list /org/gnome/terminal/legacy/profiles:/ | head -1 | tr -d '/')
+    fi
+    if [[ -z "$profile_id" ]]; then
+        log_warn "No GNOME Terminal profile found. Skipping customization."
+        return
+    fi
+
+    local path="/org/gnome/terminal/legacy/profiles:/:${profile_id}/"
+
+    dconf write "${path}visible-name" "'Catppuccin Mocha'"
+    dconf write "${path}use-theme-colors" "false"
+    dconf write "${path}foreground-color" "'#cdd6f4'"
+    dconf write "${path}background-color" "'#1e1e2e'"
+    dconf write "${path}cursor-colors-set" "true"
+    dconf write "${path}cursor-foreground-color" "'#1e1e2e'"
+    dconf write "${path}cursor-background-color" "'#f5e0dc'"
+    dconf write "${path}palette" "['#45475a', '#f38ba8', '#a6e3a1', '#f9e2af', '#89b4fa', '#f5c2e7', '#94e2d5', '#bac2de', '#585b70', '#f38ba8', '#a6e3a1', '#f9e2af', '#89b4fa', '#f5c2e7', '#94e2d5', '#a6adc8']"
+    dconf write "${path}bold-is-bright" "true"
+    dconf write "${path}font" "'JetBrainsMono Nerd Font 14'"
+
+    log_ok "GNOME Terminal customized with Catppuccin Mocha"
+}
+
 # =============================================================================
 # 19. Nerd Font (for icons in terminals/LazyVim)
 # =============================================================================
@@ -536,6 +570,7 @@ main() {
     install_power_tools
     install_cli_tools
     install_nerd_font
+    customize_gnome_terminal
     symlink_dotfiles
 
     echo ""
