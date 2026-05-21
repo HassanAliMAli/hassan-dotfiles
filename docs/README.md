@@ -33,6 +33,8 @@ hassan-dotfiles/
 
 This project uses **GNU Stow**, a symlink manager. When you run `stow .` in this directory, it creates symbolic links (shortcuts) from each config file to the correct location on your system. For example, `nushell/config.nu` gets linked to `~/.config/nushell/config.nu`.
 
+The `.stowrc` file configures Stow's behavior: it targets `~/.config` and ignores `zshrc/`, `ssh/`, and `docs/` (these are symlinked separately by the setup script).
+
 ## Quick Start
 
 ```bash

@@ -9,10 +9,11 @@ This script is **idempotent**, meaning it's safe to run multiple times. If somet
 1. Installing system prerequisites
 2. Installing all applications and tools
 3. Installing JetBrainsMono Nerd Font (full family) system-wide
-4. Installing Catppuccin Mocha theme for GTK, icons, cursors, VSCode, and browsers
+4. Installing Catppuccin Mocha theme for GTK, cursors, VSCode, and browsers
 5. Applying system-wide dark mode and font settings
 6. Customizing GNOME Terminal with Catppuccin Mocha theme
-7. Symlinking all dotfiles using GNU Stow
+7. Configuring npm to use a fixed prefix (`~/.npm-global`) so global packages work from any shell
+8. Symlinking all dotfiles using GNU Stow
 
 ## Architecture
 
@@ -47,7 +48,7 @@ This script is **idempotent**, meaning it's safe to run multiple times. If somet
 
 #### 5. `install_nushell()`
 - **What it does:** Installs Nushell, a modern shell with structured data pipelines
-- **How:** Tries `cargo install nu` first (latest version), falls back to `apt install nushell` (older but stable)
+- **How:** Installs via `apt install nushell` (avoids 30-min cargo compile)
 - **Why:** Nushell treats output as structured data (tables, JSON) rather than plain text
 
 #### 6. `install_wezterm()`
@@ -84,7 +85,7 @@ This script is **idempotent**, meaning it's safe to run multiple times. If somet
 - **Why:** Essential for data analysis, AI tooling, and Python development
 
 #### 13. `install_node()`
-- **What it does:** Installs Node.js LTS via NodeSource repository
+- **What it does:** Installs Node.js LTS via NodeSource repository, then configures npm to use a fixed user-writable prefix (`~/.npm-global`) so `npm i -g` works without sudo and binaries are reachable from any shell
 - **Why:** Needed for JavaScript/TypeScript development, npm packages, and tools like gemini-cli
 
 #### 14. `install_vlc()`
@@ -143,7 +144,7 @@ This script is **idempotent**, meaning it's safe to run multiple times. If somet
 #### 24. `install_catppuccin_gtk()`
 - **What it does:** Downloads and installs the Catppuccin Mocha GTK theme system-wide to `/usr/share/themes/Catppuccin-Mocha`
 - **How:** Downloads the pre-built theme ZIP from GitHub releases, extracts it, applies it via `gsettings`
-- **Fallback:** If the download fails, clones the `catppuccin/gtk` repo and builds from source using `meson` + `ninja`
+- **Fallback:** Tries v1.0.3 release ZIP directly (the repo is archived); warns if both downloads fail
 - **Why:** GTK theme affects all GTK applications (file managers, settings dialogs, GNOME apps) so they match the Catppuccin Mocha color scheme
 
 #### 25. `install_catppuccin_cursors()`
@@ -210,12 +211,13 @@ The script uses colored output for readability:
 ## Execution Order
 
 ```
-prerequisites → curl → git → zsh → nushell → wezterm → ghostty → vim → neovim → lazyvim
+prerequisites → curl → git → zsh → nushell → rust → wezterm → ghostty → vim → neovim → lazyvim
 → vscode → python → node → vlc → brave → gh → gemini-cli → opencode → graphify → obsidian
-→ power tools → cli tools → nerd font (full family) → catppuccin gtk → catppuccin icons
-→ vscode catppuccin → browser catppuccin → gnome terminal → system dark mode → symlink dotfiles
+→ power tools → cli tools → starship → zellij → atuin → television → direnv
+→ nerd font → catppuccin gtk → catppuccin cursors → vscode catppuccin → browser catppuccin
+→ gnome terminal → system dark mode → symlink dotfiles
 ```
 
 ## Post-Install Note
 
-After running the script, **restart your session** (logout/login) for system-wide theme and font changes to take full effect across all applications.
+After running the script, **restart your session** (logout/login) for system-wide theme and font changes to take full effect across all applications. Also **reopen your terminal** for PATH changes (npm prefix, cargo bins, opencode) to be picked up by your shell.

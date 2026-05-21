@@ -1,6 +1,6 @@
 # Hassan's Dotfiles
 
-> **One command to set up a complete, beautiful Linux development environment.**
+> **One command to set up a beautiful, complete Linux development environment.**
 
 This repository contains all the configuration files that make my computer look good, work fast, and feel consistent. If you clone it and run one script, your Ubuntu machine will be set up exactly like mine.
 
@@ -78,10 +78,11 @@ This means:
 
 1. Installs all required packages (apps, fonts, tools)
 2. Downloads and installs the JetBrainsMono Nerd Font family
-3. Downloads and applies the Catppuccin GTK theme, icons, and cursors
+3. Downloads and applies the Catppuccin Mocha GTK theme and cursor theme
 4. Configures VSCode with the Catppuccin theme
 5. Applies system-wide dark mode and font settings
-6. Symlinks all config files with `stow`
+6. Configures npm to use a fixed prefix (`~/.npm-global`) so global packages work from any shell
+7. Symlinks all config files with `stow`
 
 The script is **idempotent** — safe to run multiple times. It checks if something is already installed before trying to install it again.
 
@@ -90,7 +91,7 @@ The script is **idempotent** — safe to run multiple times. It checks if someth
 ## Quick Start
 
 ### Prerequisites
-- Ubuntu (tested on Jammy 22.04 and Noble 24.04)
+- Ubuntu (tested on 22.04 Jammy, 24.04 Noble, and 26.04 Resolute)
 - Internet connection
 - Sudo access
 
@@ -165,11 +166,7 @@ These have their configs symlinked but the script can't install them automatical
 
 | Tool | What It Does | Install It With |
 |------|-------------|-----------------|
-| **Starship** | Beautiful command prompt | `curl -sS https://starship.rs/install.sh \| sh` |
-| **Zellij** | Terminal panes and tabs | `cargo install zellij` or see [zellij.dev](https://zellij.dev) |
-| **Television** | Fuzzy finder (`Ctrl+T`) | `cargo install television` or see [GitHub](https://github.com/alexpasmantier/television) |
-| **Atuin** | Supercharged history (`Ctrl+R`) | `curl --proto '=https' --tlsv1.2 -LsSf https://setup.atuin.sh \| sh` |
-| **direnv** | Auto-load env vars per project | `sudo apt install -y direnv` then run `direnv allow` in projects |
+| **Nix** | Reproducible package manager | `sh <(curl -L https://nixos.org/nix/install) --daemon` |
 
 ### direnv Needs Approval Per Project
 After installing direnv, it won't load any `.envrc` file until you explicitly approve it. When you enter a project directory with a `.envrc`, you'll see a warning. Run `direnv allow` to trust it.
