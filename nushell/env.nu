@@ -18,11 +18,10 @@ def create_left_prompt [] {
 }
 
 def create_right_prompt [] {
-    # create a right prompt in magenta with green separators and am/pm underlined
     let time_segment = ([
         (ansi reset)
         (ansi magenta)
-        (date now | format date '%x %X') # try to respect user's locale
+        (date now | format date '%x %X')
     ] | str join | str replace --regex --all "([/:])" $"(ansi green)${1}(ansi magenta)" |
         str replace --regex --all "([AP]M)" $"(ansi magenta_underline)${1}")
 
@@ -35,9 +34,35 @@ def create_right_prompt [] {
     ([$last_exit_code, (char space), $time_segment] | str join)
 }
 
+def create_minimal_prompt [] {
+    let dir = match (do -i { $env.PWD | path relative-to $nu.home-path }) {
+        null => $env.PWD
+        '' => '~'
+        $relative_pwd => ([~ $relative_pwd] | path join)
+    }
+    $"(ansi cyan_bold)($dir) (ansi reset)(ansi green_bold)❯(ansi reset) "
+}
+
+$env.PROMPT_MINIMAL = false
+
+def --env toggle_prompt [] {
+    if $env.PROMPT_MINIMAL {
+        $env.PROMPT_MINIMAL = false
+        $env.PROMPT_COMMAND = {|| starship prompt }
+        $env.PROMPT_COMMAND_RIGHT = {|| create_right_prompt }
+        print -e $"(ansi green)✓ Full prompt enabled(ansi reset)"
+    } else {
+        $env.PROMPT_MINIMAL = true
+        $env.PROMPT_COMMAND = {|| create_minimal_prompt }
+        $env.PROMPT_COMMAND_RIGHT = {|| "" }
+        print -e $"(ansi yellow)✓ Minimal prompt enabled (directory only)(ansi reset)"
+    }
+}
+
+alias tp = toggle_prompt
+
 # Use nushell functions to define your right and left prompt
-$env.PROMPT_COMMAND = {|| create_left_prompt }
-# FIXME: This default is not implemented in rust code as of 2023-09-08.
+$env.PROMPT_COMMAND = {|| starship prompt }
 $env.PROMPT_COMMAND_RIGHT = {|| create_right_prompt }
 
 # The prompt indicators are environmental variables that represent
