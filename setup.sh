@@ -616,19 +616,10 @@ install_nerd_font() {
         fi
     done
 
-    # Also install user-local copy for apps that only check ~/.local/share/fonts
-    local user_font_dir="$HOME/.local/share/fonts/JetBrainsMonoNerd"
-    mkdir -p "$user_font_dir"
-    for f in "$temp_dir"/ttf/*.ttf "$temp_dir"/*.ttf; do
-        if [[ -f "$f" ]]; then
-            cp "$f" "$user_font_dir/"
-        fi
-    done
-
     rm -rf "$temp_dir"
     sudo touch "$marker"
     fc-cache -fv
-    log_ok "JetBrainsMono Nerd Font installed ($found files system-wide + user-local)"
+    log_ok "JetBrainsMono Nerd Font installed ($found files system-wide)"
 }
 
 # =============================================================================
