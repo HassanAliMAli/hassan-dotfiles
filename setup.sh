@@ -183,12 +183,24 @@ install_neovim() {
 
 install_lazyvim() {
     local nvim_config_dir="$HOME/.config/nvim"
+    local script_dir
+    script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+    # If this repo already has a LazyVim config (init.lua exists), just symlink it
+    if [[ -f "$script_dir/nvim/init.lua" ]]; then
+        log_ok "LazyVim config exists in this repo. Symlinking via stow."
+        return
+    fi
+
+    # Fresh install: clone the LazyVim starter
     if [[ -d "$nvim_config_dir" && -f "$nvim_config_dir/init.lua" ]]; then
         log_ok "LazyVim config already exists at $nvim_config_dir"
         return
     fi
     log_info "Setting up LazyVim..."
-    if [[ -d "$nvim_config_dir" ]]; then
+    if [[ -L "$nvim_config_dir" ]]; then
+        rm "$nvim_config_dir"
+    elif [[ -d "$nvim_config_dir" ]]; then
         mv "$nvim_config_dir" "${nvim_config_dir}.bak.$(date +%s)"
     fi
     git clone https://github.com/LazyVim/starter "$nvim_config_dir"
@@ -441,6 +453,67 @@ install_cli_tools() {
         sudo ln -sf "$(which fdfind)" /usr/local/bin/fd
     fi
     log_ok "CLI tools installed: ${missing[*]}"
+}
+
+install_starship() {
+    if command_exists starship; then
+        log_ok "Starship already installed ($(starship --version))"
+        return
+    fi
+    log_info "Installing Starship prompt..."
+    curl -sS https://starship.rs/install.sh | sh
+    log_ok "Starship installed"
+}
+
+install_zellij() {
+    if command_exists zellij; then
+        log_ok "Zellij already installed ($(zellij --version))"
+        return
+    fi
+    log_info "Installing Zellij..."
+    if command_exists cargo; then
+        cargo install --locked zellij
+    else
+        log_warn "Cargo not found. Installing Zellij via curl..."
+        curl -L https://github.com/zellij-org/zellij/releases/latest/download/zellij-x86_64-unknown-linux-musl.tar.gz | \
+            tar xz -C /usr/local/bin zellij
+    fi
+    log_ok "Zellij installed"
+}
+
+install_atuin() {
+    if command_exists atuin; then
+        log_ok "Atuin already installed ($(atuin --version))"
+        return
+    fi
+    log_info "Installing Atuin..."
+    curl --proto '=https' --tlsv1.2 -LsSf https://setup.atuin.sh | sh
+    log_ok "Atuin installed"
+}
+
+install_television() {
+    if command_exists tv; then
+        log_ok "Television already installed"
+        return
+    fi
+    log_info "Installing Television..."
+    if command_exists cargo; then
+        cargo install television
+    else
+        log_warn "Cargo not found. Install Television manually from https://github.com/alexpasmantier/television"
+        return
+    fi
+    log_ok "Television installed"
+}
+
+install_direnv() {
+    if command_exists direnv; then
+        log_ok "direnv already installed"
+        return
+    fi
+    log_info "Installing direnv..."
+    sudo apt install -y direnv
+    log_ok "direnv installed"
 }
 
 install_power_tools() {
@@ -797,8 +870,82 @@ symlink_dotfiles() {
     script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     log_info "Symlinking dotfiles from $script_dir..."
     cd "$script_dir"
-    stow .
-    log_ok "Dotfiles symlinked"
+
+    # Clean up broken symlinks first
+    local broken_links=(
+        "$HOME/.config/tools"
+        "$HOME/.config/terminals"
+        "$HOME/.config/shells"
+        "$HOME/.config/nvim"
+        "$HOME/.config/starship.toml"
+        "$HOME/.tmux.conf"
+        "$HOME/.editorconfig"
+    )
+    for link in "${broken_links[@]}"; do
+        if [[ -L "$link" && ! -e "$link" ]]; then
+            rm -f "$link"
+        fi
+    done
+
+    # Main configs to ~/.config (all folders except zshrc and ssh, per .stowrc)
+    stow --adopt -R . 2>/dev/null || true
+
+    # Force symlink any real directories that stow couldn't adopt
+    for dir in atuin gh-dash ghostty nix nushell nvim opencode starship television wezterm zellij; do
+        local target="$HOME/.config/$dir"
+        local source="$script_dir/$dir"
+        if [[ -d "$target" && ! -L "$target" ]]; then
+            # Move unique runtime files aside, symlink, move back
+            local tmpdir
+            tmpdir=$(mktemp -d)
+            # Copy files that aren't in the repo
+            if [[ -d "$source" ]]; then
+                for f in "$target"/*; do
+                    local base
+                    base=$(basename "$f")
+                    if [[ ! -e "$source/$base" ]]; then
+                        cp -a "$f" "$tmpdir/" 2>/dev/null || true
+                    fi
+                done
+            fi
+            rm -rf "$target"
+            ln -sf "../Desktop/coding/hassan-dotfiles/$dir" "$target"
+            # Restore unique files
+            for f in "$tmpdir"/*; do
+                cp -a "$f" "$target/" 2>/dev/null || true
+            done
+            rm -rf "$tmpdir"
+        elif [[ ! -e "$target" && ! -L "$target" && -d "$source" ]]; then
+            ln -sf "../Desktop/coding/hassan-dotfiles/$dir" "$target"
+        fi
+    done
+
+    # Zsh config to home directory (~/.zshrc)
+    if [[ -f "$script_dir/zshrc/.zshrc" ]]; then
+        if [[ -L "$HOME/.zshrc" ]]; then
+            ln -sf "../Desktop/coding/hassan-dotfiles/zshrc/.zshrc" "$HOME/.zshrc"
+        elif [[ -f "$HOME/.zshrc" ]]; then
+            mv "$HOME/.zshrc" "$HOME/.zshrc.bak.$(date +%s)"
+            ln -sf "../Desktop/coding/hassan-dotfiles/zshrc/.zshrc" "$HOME/.zshrc"
+        else
+            ln -sf "../Desktop/coding/hassan-dotfiles/zshrc/.zshrc" "$HOME/.zshrc"
+        fi
+    fi
+
+    # SSH config to ~/.ssh/config
+    if [[ -f "$script_dir/ssh/config" ]]; then
+        mkdir -p "$HOME/.ssh"
+        if [[ -L "$HOME/.ssh/config" ]]; then
+            ln -sf "../Desktop/coding/hassan-dotfiles/ssh/config" "$HOME/.ssh/config"
+        elif [[ -f "$HOME/.ssh/config" ]]; then
+            mv "$HOME/.ssh/config" "$HOME/.ssh/config.bak.$(date +%s)"
+            ln -sf "../Desktop/coding/hassan-dotfiles/ssh/config" "$HOME/.ssh/config"
+        else
+            ln -sf "../Desktop/coding/hassan-dotfiles/ssh/config" "$HOME/.ssh/config"
+        fi
+    fi
+
+    log_ok "All dotfiles symlinked"
 }
 
 # =============================================================================
@@ -836,6 +983,11 @@ main() {
     install_obsidian
     install_power_tools
     install_cli_tools
+    install_starship
+    install_zellij
+    install_atuin
+    install_television
+    install_direnv
     install_nerd_font
     install_catppuccin_gtk
     install_catppuccin_icons
@@ -854,6 +1006,7 @@ main() {
     log_info "Run 'nvim' to initialize LazyVim plugins"
     log_info "Run 'graphify install --platform opencode' to register Graphify"
     log_info "Consider changing your default shell: chsh -s \$(which zsh)"
+    log_info "Run 'direnv allow' in your projects to enable direnv"
     log_info "Restart your session (logout/login) for system-wide theme changes to take full effect"
     echo ""
 }

@@ -3,3 +3,9 @@ tmux/plugins/
 raycast
 fzf
 history.txt
+nushell/vendor/
+opencode/AGENTS.md
+opencode/opencode.jsonc
+opencode/node_modules/
+opencode/package.json
+opencode/package-lock.json
