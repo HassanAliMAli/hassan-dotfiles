@@ -728,41 +728,38 @@ install_catppuccin_gtk_manual() {
 }
 
 # =============================================================================
-# 21. Catppuccin Icon Theme (system-wide)
+# 21. Catppuccin Cursor Theme (system-wide)
+#
+# Note: Catppuccin does not provide a desktop icon theme.
+# For Catppuccin-colored file/folder icons, install Papirus + papirus-folders.
 # =============================================================================
 
-install_catppuccin_icons() {
-    local icon_dir="/usr/share/icons/Catppuccin"
-    if [[ -d "$icon_dir" ]]; then
-        log_ok "Catppuccin icon theme already installed"
+install_catppuccin_cursors() {
+    local cursor_dir="/usr/share/icons/catppuccin-mocha-lavender-cursors"
+    if [[ -d "$cursor_dir" ]]; then
+        log_ok "Catppuccin cursor theme already installed"
         return
     fi
-    log_info "Installing Catppuccin icon theme system-wide..."
+    log_info "Installing Catppuccin Mocha Lavender cursor theme..."
 
     local temp_dir
     temp_dir=$(mktemp -d)
-    curl -fsSL "https://github.com/catppuccin/cursors/releases/latest/download/catppuccin-mocha-lavender-cursors.zip" \
-        -o "$temp_dir/cursors.zip" 2>/dev/null || {
+    if ! curl -fsSL "https://github.com/catppuccin/cursors/releases/latest/download/catppuccin-mocha-lavender-cursors.zip" \
+        -o "$temp_dir/cursors.zip"; then
         log_warn "Could not download Catppuccin cursors. Skipping."
+        log_info "Install manually from https://github.com/catppuccin/cursors/releases"
         rm -rf "$temp_dir"
         return
-    }
-
-    sudo mkdir -p "$icon_dir"
-    if command_exists bsdtar; then
-        bsdtar -xzf "$temp_dir/cursors.zip" -C "$icon_dir" --strip-components=1 2>/dev/null || \
-        bsdtar -xzf "$temp_dir/cursors.zip" -C "$icon_dir" 2>/dev/null
-    else
-        unzip -q "$temp_dir/cursors.zip" -d "$icon_dir" 2>/dev/null
     fi
+
+    sudo unzip -q "$temp_dir/cursors.zip" -d /usr/share/icons/
     rm -rf "$temp_dir"
 
     if command_exists gsettings; then
-        gsettings set org.gnome.desktop.interface icon-theme "Catppuccin" 2>/dev/null || true
-        gsettings set org.gnome.desktop.interface cursor-theme "Catppuccin-Mocha-Lavender-Cursors" 2>/dev/null || true
+        gsettings set org.gnome.desktop.interface cursor-theme "catppuccin-mocha-lavender-cursors" 2>/dev/null || true
     fi
 
-    log_ok "Catppuccin icon/cursor theme installed"
+    log_ok "Catppuccin cursor theme installed"
 }
 
 # =============================================================================
@@ -1014,7 +1011,7 @@ main() {
     install_direnv
     install_nerd_font
     install_catppuccin_gtk
-    install_catppuccin_icons
+    install_catppuccin_cursors
     install_vscode_catppuccin
     install_browser_catppuccin
     customize_gnome_terminal

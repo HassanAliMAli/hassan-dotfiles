@@ -146,10 +146,11 @@ This script is **idempotent**, meaning it's safe to run multiple times. If somet
 - **Fallback:** If the download fails, clones the `catppuccin/gtk` repo and builds from source using `meson` + `ninja`
 - **Why:** GTK theme affects all GTK applications (file managers, settings dialogs, GNOME apps) so they match the Catppuccin Mocha color scheme
 
-#### 25. `install_catppuccin_icons()`
-- **What it does:** Downloads and installs Catppuccin icon and cursor themes to `/usr/share/icons/Catppuccin`
-- **How:** Downloads the cursor tarball from `catppuccin/cursors` releases, extracts to the icons directory, applies via `gsettings`
-- **Why:** Makes file managers, desktop icons, and mouse cursors match the Catppuccin aesthetic
+#### 25. `install_catppuccin_cursors()`
+- **What it does:** Downloads and installs Catppuccin cursor theme to `/usr/share/icons/catppuccin-mocha-lavender-cursors`
+- **How:** Downloads the cursor zip from `catppuccin/cursors` releases, extracts to `/usr/share/icons/`, applies via `gsettings`
+- **Why:** Makes mouse cursor match the Catppuccin aesthetic
+- **Note:** Catppuccin does not provide a desktop icon theme. For Catppuccin-colored file/folder icons, install Papirus + `papirus-folders` separately.
 
 #### 26. `install_vscode_catppuccin()`
 - **What it does:** Installs and activates the Catppuccin theme extension for VSCode

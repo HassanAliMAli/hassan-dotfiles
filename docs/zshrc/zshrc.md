@@ -135,14 +135,14 @@ alias cat=bat
 export GOPATH=~/go
 alias v="nvim"
 alias nm="nmap -sC -sV -oN nmap"
-export PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:~/vimpkg/bin:${GOPATH}/bin:~/.cargo/bin
+export PATH="$HOME/.opencode/bin:$HOME/.cargo/bin:$HOME/.local/bin:${GOPATH}/bin:$PATH"
 alias cl='clear'
 ```
 
 - **`GOPATH`**: Go workspace directory
 - **`v`**: Open Neovim
 - **`nm`**: Nmap scan with default options (save to `nmap` file)
-- **`PATH`**: Add Go, Cargo, and custom bin directories
+- **`PATH`**: Add OpenCode, Cargo, local, and Go bin directories (redundant system paths removed)
 
 ### Lines 85-100: Kubernetes Aliases
 

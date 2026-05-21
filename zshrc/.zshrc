@@ -78,7 +78,7 @@ alias v="nvim"
 # Nmap
 alias nm="nmap -sC -sV -oN nmap"
 
-export PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:~/vimpkg/bin:${GOPATH}/bin:~/.cargo/bin
+export PATH="$HOME/.opencode/bin:$HOME/.cargo/bin:$HOME/.local/bin:${GOPATH}/bin:$PATH"
 
 alias cl='clear'
 
