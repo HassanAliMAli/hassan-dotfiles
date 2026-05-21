@@ -452,6 +452,9 @@ install_cli_tools() {
     if command_exists fdfind && ! command_exists fd; then
         sudo ln -sf "$(which fdfind)" /usr/local/bin/fd
     fi
+    if command_exists batcat && ! command_exists bat; then
+        sudo ln -sf "$(which batcat)" /usr/local/bin/bat
+    fi
     log_ok "CLI tools installed: ${missing[*]}"
 }
 
