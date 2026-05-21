@@ -271,6 +271,17 @@ install_node() {
     log_info "Installing Node.js LTS via NodeSource..."
     curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
     sudo apt install -y nodejs
+
+    # Configure npm to use a fixed user-writable prefix so global installs
+    # (gemini, yarn, etc.) don't require sudo and work from any shell.
+    # NVM stores globals under its version-specific path (unreachable from
+    # Nushell). A fixed prefix avoids this entirely.
+    local npm_prefix="$HOME/.npm-global"
+    if ! grep -q "^prefix=" "$HOME/.npmrc" 2>/dev/null; then
+        echo "prefix=$npm_prefix" >> "$HOME/.npmrc"
+    fi
+    mkdir -p "$npm_prefix/bin" "$npm_prefix/lib"
+
     log_ok "Node.js installed ($(node --version))"
 }
 
