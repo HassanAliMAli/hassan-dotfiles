@@ -162,3 +162,5 @@ export XDG_CONFIG_HOME=~/.config
 eval "$(zoxide init zsh)"
 eval "$(atuin init zsh)"
 eval "$(direnv hook zsh)"
+
+. "$HOME/.atuin/bin/env"

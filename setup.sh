@@ -114,10 +114,11 @@ install_wezterm() {
 
     if [[ "$codename" == "noble" || "$codename" == "jammy" || "$codename" == "oracular" ]]; then
         sudo apt install -y lsb-release software-properties-common apt-transport-https
-        local wezterm_gpg="/usr/share/keyrings/wezterm.gpg"
-        wget -qO- https://raw.githubusercontent.com/wez/wezterm/main/keys/wezterm.gpg.key | \
-            sudo gpg --dearmor -o "$wezterm_gpg"
-        echo "deb [signed-by=$wezterm_gpg] https://raw.githubusercontent.com/wez/wezterm/main/ $codename main" | \
+        local wezterm_gpg="/usr/share/keyrings/wezterm-fury.gpg"
+        curl -fsSL https://apt.fury.io/wez/gpg.key | \
+            sudo gpg --yes --dearmor -o "$wezterm_gpg"
+        sudo chmod 644 "$wezterm_gpg"
+        echo "deb [signed-by=$wezterm_gpg] https://apt.fury.io/wez/ * *" | \
             sudo tee /etc/apt/sources.list.d/wezterm.list
         sudo apt update -y
         sudo apt install -y wezterm
@@ -368,7 +369,7 @@ install_gemini_cli() {
         return
     fi
     log_info "Installing Gemini CLI..."
-    npm i -g @anthropic-ai/gemini-cli
+    npm i -g @google/gemini-cli
     log_ok "Gemini CLI installed"
 }
 
@@ -492,7 +493,7 @@ install_zellij() {
     else
         log_warn "Cargo not found. Installing Zellij via curl..."
         curl -L https://github.com/zellij-org/zellij/releases/latest/download/zellij-x86_64-unknown-linux-musl.tar.gz | \
-            tar xz -C /usr/local/bin zellij
+            sudo tar xz -C /usr/local/bin zellij
     fi
     log_ok "Zellij installed"
 }
@@ -637,12 +638,15 @@ install_catppuccin_gtk() {
     if ! command_exists unzip; then
         sudo apt install -y unzip
     fi
+    if ! command_exists bsdtar; then
+        sudo apt install -y bsdtar 2>/dev/null || true
+    fi
 
     local temp_dir
     temp_dir=$(mktemp -d)
-    curl -fsSL "https://github.com/catppuccin/gtk/releases/latest/download/Catppuccin-Mocha-Standard-Lavender-Dark.zip" \
+    curl -fsSL "https://github.com/catppuccin/gtk/releases/latest/download/catppuccin-mocha-lavender.zip" \
         -o "$temp_dir/theme.zip" 2>/dev/null || \
-    curl -fsSL "https://github.com/catppuccin/gtk/releases/latest/download/Catppuccin-Mocha-Standard-Blue-Dark.zip" \
+    curl -fsSL "https://github.com/catppuccin/gtk/releases/latest/download/catppuccin-mocha-blue.zip" \
         -o "$temp_dir/theme.zip" 2>/dev/null || {
         log_warn "Could not download Catppuccin GTK theme. Trying manual install..."
         rm -rf "$temp_dir"
@@ -729,16 +733,20 @@ install_catppuccin_icons() {
 
     local temp_dir
     temp_dir=$(mktemp -d)
-    curl -fsSL "https://github.com/catppuccin/cursors/releases/latest/download/Catppuccin-Mocha-Lavender-Cursors.tar.gz" \
-        -o "$temp_dir/cursors.tar.gz" 2>/dev/null || {
+    curl -fsSL "https://github.com/catppuccin/cursors/releases/latest/download/catppuccin-mocha-lavender-cursors.zip" \
+        -o "$temp_dir/cursors.zip" 2>/dev/null || {
         log_warn "Could not download Catppuccin cursors. Skipping."
         rm -rf "$temp_dir"
         return
     }
 
     sudo mkdir -p "$icon_dir"
-    tar -xzf "$temp_dir/cursors.tar.gz" -C "$icon_dir" --strip-components=1 2>/dev/null || \
-        tar -xzf "$temp_dir/cursors.tar.gz" -C "$icon_dir" 2>/dev/null
+    if command_exists bsdtar; then
+        bsdtar -xzf "$temp_dir/cursors.zip" -C "$icon_dir" --strip-components=1 2>/dev/null || \
+        bsdtar -xzf "$temp_dir/cursors.zip" -C "$icon_dir" 2>/dev/null
+    else
+        unzip -q "$temp_dir/cursors.zip" -d "$icon_dir" 2>/dev/null
+    fi
     rm -rf "$temp_dir"
 
     if command_exists gsettings; then
