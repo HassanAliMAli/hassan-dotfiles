@@ -396,6 +396,7 @@ install_cli_tools() {
         delta
         eza
         lazygit
+        btop
     )
     local missing=()
     for tool in "${tools[@]}"; do
