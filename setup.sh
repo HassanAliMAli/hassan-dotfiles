@@ -490,7 +490,11 @@ customize_gnome_terminal() {
     dconf write "${path}cursor-background-color" "'#f5e0dc'"
     dconf write "${path}palette" "['#45475a', '#f38ba8', '#a6e3a1', '#f9e2af', '#89b4fa', '#f5c2e7', '#94e2d5', '#bac2de', '#585b70', '#f38ba8', '#a6e3a1', '#f9e2af', '#89b4fa', '#f5c2e7', '#94e2d5', '#a6adc8']"
     dconf write "${path}bold-is-bright" "true"
-    dconf write "${path}font" "'JetBrainsMono Nerd Font 14'"
+    dconf write "${path}font" "'JetBrainsMono Nerd Font 15'"
+    dconf write "${path}use-system-font" "false"
+
+    log_info "Setting system monospace font..."
+    gsettings set org.gnome.desktop.interface monospace-font-name "JetBrainsMono Nerd Font 14"
 
     log_ok "GNOME Terminal customized with Catppuccin Mocha"
 }
