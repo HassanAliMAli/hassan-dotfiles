@@ -117,8 +117,9 @@ $env.NU_PLUGIN_DIRS = [
 # An alternate way to add entries to $env.PATH is to use the custom command `path add`
 # which is built into the nushell stdlib:
 use std "path add"
-path add ($env.HOME | path join ".cargo/bin")
 path add ($env.HOME | path join ".opencode/bin")
+path add ($env.HOME | path join ".cargo/bin")
+path add ($env.HOME | path join ".npm-global/bin")
 path add ($env.HOME | path join ".local/bin")
 path add ($env.HOME | path join ".turso")
 path add ($env.HOME | path join ".local/share/mise/shims")

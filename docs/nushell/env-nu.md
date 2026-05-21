@@ -133,17 +133,19 @@ $env.PROMPT_MULTILINE_INDICATOR = {|| "::: " }
 
 ```nushell
 use std "path add"
-path add ($env.HOME | path join ".cargo/bin")
 path add ($env.HOME | path join ".opencode/bin")
+path add ($env.HOME | path join ".cargo/bin")
+path add ($env.HOME | path join ".npm-global/bin")
 path add ($env.HOME | path join ".local/bin")
 path add ($env.HOME | path join ".turso")
 path add ($env.HOME | path join ".local/share/mise/shims")
 ```
 - **What it does:** Adds directories to the system PATH so programs in those locations can be run from anywhere
 - **Directories added:**
-  - `~/.cargo/bin` — Rust/cargo installed binaries (Television, etc.)
   - `~/.opencode/bin` — OpenCode CLI
-  - `~/.local/bin` — User-local scripts and pip installs
+  - `~/.cargo/bin` — Rust/cargo installed binaries (Television, Zellij)
+  - `~/.npm-global/bin` — npm global packages (Gemini CLI, yarn, coderabbit)
+  - `~/.local/bin` — User-local scripts and pip/uv installs
   - `~/.turso` — Turso database CLI
   - `~/.local/share/mise/shims` — Mise version manager shims
 

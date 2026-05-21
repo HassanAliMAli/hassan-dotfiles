@@ -135,7 +135,7 @@ alias cat=bat
 export GOPATH=~/go
 alias v="nvim"
 alias nm="nmap -sC -sV -oN nmap"
-export PATH="$HOME/.opencode/bin:$HOME/.cargo/bin:$HOME/.local/bin:${GOPATH}/bin:$PATH"
+export PATH="$HOME/.opencode/bin:$HOME/.cargo/bin:$HOME/.npm-global/bin:$HOME/.local/bin:${GOPATH}/bin:$PATH"
 alias cl='clear'
 ```
 
