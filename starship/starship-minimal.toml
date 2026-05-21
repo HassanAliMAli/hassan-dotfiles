@@ -1,0 +1,13 @@
+# Minimal prompt: only current directory
+format = """
+$directory
+$character"""
+
+[directory]
+style = "bold cyan"
+truncation_length = 3
+truncation_symbol = "…/"
+
+[character]
+success_symbol = "[❯](bold green)"
+error_symbol = "[❯](bold red)"

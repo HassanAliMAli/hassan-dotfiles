@@ -19,6 +19,18 @@ bindkey '^j' down-line-or-search
 eval "$(starship init zsh)"
 export STARSHIP_CONFIG=~/.config/starship/starship.toml
 
+toggle_prompt() {
+    if [[ "$STARSHIP_CONFIG" == *minimal* ]]; then
+        export STARSHIP_CONFIG=~/.config/starship/starship.toml
+        echo -e "\033[0;32m✓ Full prompt enabled\033[0m"
+    else
+        export STARSHIP_CONFIG=~/.config/starship/starship-minimal.toml
+        echo -e "\033[0;33m✓ Minimal prompt enabled (directory only)\033[0m"
+    fi
+}
+alias tp=toggle_prompt
+bindkey '^p' toggle_prompt
+
 # You may need to manually set your language environment
 export LANG=en_US.UTF-8
 
