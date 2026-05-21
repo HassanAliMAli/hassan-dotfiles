@@ -72,7 +72,7 @@ install_zsh() {
 
 install_rust() {
     if command_exists cargo; then
-        log_ok "Rust already installed (cargo $($(which cargo) --version | grep -oP '\d+\.\d+\.\d+' || echo "present"))"
+        log_ok "Rust already installed (cargo $(cargo --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || echo "present"))"
         return
     fi
     log_info "Installing Rust via rustup (needed for Zellij, Television, etc.)..."
@@ -109,24 +109,15 @@ install_wezterm() {
     fi
     log_info "Installing WezTerm..."
 
-    local codename
-    codename=$(. /etc/os-release && echo "$VERSION_CODENAME")
-
-    if [[ "$codename" == "noble" || "$codename" == "jammy" || "$codename" == "oracular" ]]; then
-        sudo apt install -y lsb-release software-properties-common apt-transport-https
-        local wezterm_gpg="/usr/share/keyrings/wezterm-fury.gpg"
-        curl -fsSL https://apt.fury.io/wez/gpg.key | \
-            sudo gpg --yes --dearmor -o "$wezterm_gpg"
-        sudo chmod 644 "$wezterm_gpg"
-        echo "deb [signed-by=$wezterm_gpg] https://apt.fury.io/wez/ * *" | \
-            sudo tee /etc/apt/sources.list.d/wezterm.list
-        sudo apt update -y
-        sudo apt install -y wezterm
-    else
-        log_warn "Unsupported Ubuntu version for WezTerm PPA. Installing from apt..."
-        sudo apt install -y wezterm 2>/dev/null || \
-            log_error "WezTerm installation failed. Try manual install from https://wezfurlong.org/wezterm/install/linux"
-    fi
+    sudo apt install -y lsb-release software-properties-common apt-transport-https
+    local wezterm_gpg="/usr/share/keyrings/wezterm-fury.gpg"
+    curl -fsSL https://apt.fury.io/wez/gpg.key | \
+        sudo gpg --yes --dearmor -o "$wezterm_gpg"
+    sudo chmod 644 "$wezterm_gpg"
+    echo "deb [signed-by=$wezterm_gpg] https://apt.fury.io/wez/ * *" | \
+        sudo tee /etc/apt/sources.list.d/wezterm.list
+    sudo apt update -y
+    sudo apt install -y wezterm
     log_ok "WezTerm installed"
 }
 
@@ -176,7 +167,7 @@ install_vim() {
 install_neovim() {
     if command_exists nvim; then
         local nvim_version
-        nvim_version=$(nvim --version | head -1 | grep -oP '\d+\.\d+\.\d+' || echo "unknown")
+        nvim_version=$(nvim --version | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || echo "unknown")
         if [[ "$nvim_version" != "unknown" ]]; then
             local major minor
             major=$(echo "$nvim_version" | cut -d. -f1)
@@ -442,12 +433,17 @@ install_obsidian() {
 
 install_cli_tools() {
     log_info "Installing essential CLI tools..."
+
+    # Handle bat separately — package is `batcat` on older Ubuntu, `bat` on 24.04+
+    if ! command_exists bat && ! command_exists batcat; then
+        sudo apt install -y batcat 2>/dev/null || sudo apt install -y bat
+    fi
+
     local tools=(
         fzf
         fd-find
         ripgrep
         zoxide
-        bat
         delta
         eza
         lazygit
@@ -519,7 +515,7 @@ install_television() {
     fi
     log_info "Installing Television..."
     if command_exists cargo; then
-        cargo install television
+        cargo install television --locked
     else
         log_warn "Cargo not found. Install Television manually from https://github.com/alexpasmantier/television"
         return

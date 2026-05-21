@@ -1,5 +1,6 @@
---target=~/.config
+--target=/home/hassanalimali/.config
 --ignore=.stowrc
 --ignore=DS_Store
 --ignore=zshrc
 --ignore=ssh
+--ignore=docs
