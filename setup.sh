@@ -718,7 +718,12 @@ install_catppuccin_gtk_manual() {
         return
     }
 
-    unzip -q "$temp_dir/theme.zip" -d "$temp_dir"
+    if ! unzip -q "$temp_dir/theme.zip" -d "$temp_dir"; then
+        log_warn "Could not extract Catppuccin GTK theme."
+        log_info "Install manually: download from https://github.com/catppuccin/gtk/releases/tag/v1.0.3"
+        rm -rf "$temp_dir"
+        return
+    fi
     local extracted
     extracted=$(find "$temp_dir" -maxdepth 2 -name "gtk-4.0" -type d | head -1 | xargs dirname)
     if [[ -d "$extracted" ]]; then
