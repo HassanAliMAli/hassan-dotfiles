@@ -385,6 +385,38 @@ install_graphify() {
     log_ok "Graphify installed"
 }
 
+install_cli_tools() {
+    log_info "Installing essential CLI tools..."
+    local tools=(
+        fzf
+        fd-find
+        ripgrep
+        zoxide
+        bat
+        delta
+        eza
+        lazygit
+    )
+    local missing=()
+    for tool in "${tools[@]}"; do
+        local cmd="$tool"
+        if [[ "$tool" == "fd-find" ]]; then cmd="fdfind"; fi
+        if ! command_exists "$cmd"; then
+            missing+=("$tool")
+        fi
+    done
+    if [[ ${#missing[@]} -eq 0 ]]; then
+        log_ok "All CLI tools already installed"
+        return
+    fi
+    sudo apt install -y "${missing[@]}"
+    # Create symlinks for tools with different apt names
+    if command_exists fdfind && ! command_exists fd; then
+        sudo ln -sf "$(which fdfind)" /usr/local/bin/fd
+    fi
+    log_ok "CLI tools installed: ${missing[*]}"
+}
+
 # =============================================================================
 # 19. Nerd Font (for icons in terminals/LazyVim)
 # =============================================================================
@@ -456,6 +488,7 @@ main() {
     install_gemini_cli
     install_opencode
     install_graphify
+    install_cli_tools
     install_nerd_font
     symlink_dotfiles
 
