@@ -67,7 +67,25 @@ install_zsh() {
 }
 
 # =============================================================================
-# 3. Nushell
+# 3. Rust (needed before cargo-based installs)
+# =============================================================================
+
+install_rust() {
+    if command_exists cargo; then
+        log_ok "Rust already installed (cargo $($(which cargo) --version | grep -oP '\d+\.\d+\.\d+' || echo "present"))"
+        return
+    fi
+    log_info "Installing Rust via rustup (needed for Zellij, Television, etc.)..."
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    # Source cargo for the rest of this script
+    if [[ -f "$HOME/.cargo/env" ]]; then
+        source "$HOME/.cargo/env"
+    fi
+    log_ok "Rust installed"
+}
+
+# =============================================================================
+# 4. Nushell (via apt to avoid 30-min cargo compile)
 # =============================================================================
 
 install_nushell() {
@@ -75,13 +93,8 @@ install_nushell() {
         log_ok "Nushell already installed ($(nu --version))"
         return
     fi
-    log_info "Installing Nushell..."
-    if command_exists cargo; then
-        cargo install nu
-    else
-        log_warn "Cargo not found. Installing Nushell via apt (may be older version)..."
-        sudo apt install -y nushell
-    fi
+    log_info "Installing Nushell via apt..."
+    sudo apt install -y nushell
     log_ok "Nushell installed"
 }
 
@@ -412,7 +425,7 @@ install_obsidian() {
     fi
     local latest_url
     latest_url=$(curl -fsSL https://api.github.com/repos/obsidianmd/obsidian-releases/releases/latest | \
-        grep -oP '"browser_download_url":.*obsidian.*\.AppImage' | head -1 | cut -d'"' -f4)
+        grep -o '"browser_download_url":.*obsidian.*\.AppImage' | head -1 | cut -d'"' -f4)
     if [[ -z "$latest_url" ]]; then
         log_warn "Could not find Obsidian AppImage URL. Install manually."
         return
@@ -688,19 +701,19 @@ install_catppuccin_gtk_manual() {
         return
     }
 
-    cd "$temp_dir/gtk-theme"
-    if command_exists meson; then
-        meson setup build --prefix=/usr -Dmocha=true -Dlavender=true -Daccents=blue 2>/dev/null && \
-            ninja -C build && sudo ninja -C build install 2>/dev/null && \
-            sudo mv /usr/share/themes/Catppuccin-Mocha-Lavender-Blue-Dark "$theme_dir" 2>/dev/null
-    else
-        sudo apt install -y meson sassc
-        meson setup build --prefix=/usr -Dmocha=true -Dlavender=true -Daccents=blue 2>/dev/null && \
-            ninja -C build && sudo ninja -C build install 2>/dev/null && \
-            sudo mv /usr/share/themes/Catppuccin-Mocha-Lavender-Blue-Dark "$theme_dir" 2>/dev/null
-    fi
-
-    cd - > /dev/null
+    (
+        cd "$temp_dir/gtk-theme" || return
+        if command_exists meson; then
+            meson setup build --prefix=/usr -Dmocha=true -Dlavender=true -Daccents=blue 2>/dev/null && \
+                ninja -C build && sudo ninja -C build install 2>/dev/null && \
+                sudo mv /usr/share/themes/Catppuccin-Mocha-Lavender-Blue-Dark "$theme_dir" 2>/dev/null
+        else
+            sudo apt install -y meson sassc
+            meson setup build --prefix=/usr -Dmocha=true -Dlavender=true -Daccents=blue 2>/dev/null && \
+                ninja -C build && sudo ninja -C build install 2>/dev/null && \
+                sudo mv /usr/share/themes/Catppuccin-Mocha-Lavender-Blue-Dark "$theme_dir" 2>/dev/null
+        fi
+    )
     rm -rf "$temp_dir"
 
     if command_exists gsettings; then
@@ -912,14 +925,14 @@ symlink_dotfiles() {
                 done
             fi
             rm -rf "$target"
-            ln -sf "../Desktop/coding/hassan-dotfiles/$dir" "$target"
+            ln -sf "$source" "$target"
             # Restore unique files
             for f in "$tmpdir"/*; do
                 cp -a "$f" "$target/" 2>/dev/null || true
             done
             rm -rf "$tmpdir"
         elif [[ ! -e "$target" && ! -L "$target" && -d "$source" ]]; then
-            ln -sf "../Desktop/coding/hassan-dotfiles/$dir" "$target"
+            ln -sf "$source" "$target"
         fi
     done
 
@@ -969,6 +982,7 @@ main() {
     install_git
     install_zsh
     install_nushell
+    install_rust
     install_wezterm
     install_ghostty
     install_vim
@@ -1005,29 +1019,20 @@ main() {
     echo -e "${GREEN}  Setup Complete!                       ${NC}"
     echo -e "${GREEN}========================================${NC}"
     echo ""
-    echo -e "${GREEN}========================================${NC}"
-    echo -e "${GREEN}  Setup Complete!                       ${NC}"
-    echo -e "${GREEN}========================================${NC}"
-    echo ""
-    log_info "Required next steps:"
+    log_info "Required next steps (script cannot do these automatically):"
     log_info "  1. chsh -s \$(which zsh)          — Change default shell to Zsh"
     log_info "  2. nvim                            — Download LazyVim plugins (takes a few mins)"
     log_info "  3. gh auth login                   — Authenticate GitHub CLI"
     log_info "  4. graphify install --platform opencode — Register Graphify"
     echo ""
-    log_info "Want Nushell instead? Run:"
+    log_info "Want Nushell instead? Your shell must be in /etc/shells:"
     log_info "  echo \$(which nu) | sudo tee -a /etc/shells"
     log_info "  chsh -s \$(which nu)"
     echo ""
-    log_info "Tools with configs ready but need manual install:"
-    log_info "  Starship:   curl -sS https://starship.rs/install.sh | sh"
-    log_info "  Zellij:     cargo install zellij"
-    log_info "  Television: cargo install television"
-    log_info "  Atuin:      curl --proto '=https' --tlsv1.2 -LsSf https://setup.atuin.sh | sh"
-    log_info "  direnv:     sudo apt install -y direnv"
-    echo ""
-    log_info "Restart your session (logout/login) for theme changes to take full effect"
-    log_info "Run 'direnv allow' in any project that has a .envrc file"
+    log_info "Other things to do after setup:"
+    log_info "  - Restart your session (logout/login) for themes to fully apply"
+    log_info "  - Run 'direnv allow' in any project that has a .envrc file"
+    log_info "  - Reopen your terminal for PATH changes to take effect"
     echo ""
 }
 
