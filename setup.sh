@@ -500,33 +500,296 @@ customize_gnome_terminal() {
 }
 
 # =============================================================================
-# 19. Nerd Font (for icons in terminals/LazyVim)
+# 19. JetBrainsMono Nerd Font (full family, system-wide)
 # =============================================================================
 
 install_nerd_font() {
-    local font_dir="$HOME/.local/share/fonts"
-    local font_file="$font_dir/JetBrainsMonoNerdFont-Regular.ttf"
-    if [[ -f "$font_file" ]]; then
-        log_ok "Nerd Font already installed"
+    local font_dir="/usr/local/share/fonts/JetBrainsMonoNerd"
+    local marker="$font_dir/.installed"
+    if [[ -f "$marker" ]]; then
+        log_ok "JetBrainsMono Nerd Font family already installed system-wide"
         return
     fi
-    log_info "Installing JetBrainsMono Nerd Font..."
-    mkdir -p "$font_dir"
+    log_info "Installing JetBrainsMono Nerd Font (full family) system-wide..."
+    sudo mkdir -p "$font_dir"
     local font_url="https://github.com/ryanoasis/nerd-fonts/releases/download/v3.3.0/JetBrainsMono.tar.xz"
     local temp_dir
     temp_dir=$(mktemp -d)
     curl -fsSL "$font_url" -o "$temp_dir/fonts.tar.xz"
     tar -xf "$temp_dir/fonts.tar.xz" -C "$temp_dir"
-    cp "$temp_dir"/JetBrainsMonoNerdFont-Regular.ttf "$font_dir/" 2>/dev/null || \
-        cp "$temp_dir"/ttf/JetBrainsMonoNerdFont-Regular.ttf "$font_dir/" 2>/dev/null || \
-        log_warn "Could not find Nerd Font file in archive. Install manually."
+
+    # Copy ALL ttf files from the archive (Regular, Bold, Italic, all weights)
+    local found=0
+    for f in "$temp_dir"/ttf/*.ttf "$temp_dir"/*.ttf; do
+        if [[ -f "$f" ]]; then
+            sudo cp "$f" "$font_dir/"
+            found=$((found + 1))
+        fi
+    done
+
+    # Also install user-local copy for apps that only check ~/.local/share/fonts
+    local user_font_dir="$HOME/.local/share/fonts/JetBrainsMonoNerd"
+    mkdir -p "$user_font_dir"
+    for f in "$temp_dir"/ttf/*.ttf "$temp_dir"/*.ttf; do
+        if [[ -f "$f" ]]; then
+            cp "$f" "$user_font_dir/"
+        fi
+    done
+
     rm -rf "$temp_dir"
+    sudo touch "$marker"
     fc-cache -fv
-    log_ok "Nerd Font installed"
+    log_ok "JetBrainsMono Nerd Font installed ($found files system-wide + user-local)"
 }
 
 # =============================================================================
-# 20. Symlink Dotfiles
+# 20. Catppuccin GTK Theme (system-wide for all GTK apps)
+# =============================================================================
+
+install_catppuccin_gtk() {
+    local theme_dir="/usr/share/themes/Catppuccin-Mocha"
+    if [[ -d "$theme_dir" ]]; then
+        log_ok "Catppuccin GTK theme already installed"
+        return
+    fi
+    log_info "Installing Catppuccin Mocha GTK theme system-wide..."
+
+    if ! command_exists unzip; then
+        sudo apt install -y unzip
+    fi
+
+    local temp_dir
+    temp_dir=$(mktemp -d)
+    curl -fsSL "https://github.com/catppuccin/gtk/releases/latest/download/Catppuccin-Mocha-Standard-Lavender-Dark.zip" \
+        -o "$temp_dir/theme.zip" 2>/dev/null || \
+    curl -fsSL "https://github.com/catppuccin/gtk/releases/latest/download/Catppuccin-Mocha-Standard-Blue-Dark.zip" \
+        -o "$temp_dir/theme.zip" 2>/dev/null || {
+        log_warn "Could not download Catppuccin GTK theme. Trying manual install..."
+        rm -rf "$temp_dir"
+        install_catppuccin_gtk_manual
+        return
+    }
+
+    unzip -q "$temp_dir/theme.zip" -d "$temp_dir"
+    # Find the extracted theme directory
+    local extracted
+    extracted=$(find "$temp_dir" -maxdepth 2 -name "gtk-4.0" -type d | head -1 | xargs dirname)
+    if [[ -d "$extracted" ]]; then
+        sudo cp -r "$extracted" "$theme_dir"
+    else
+        # Fallback: copy everything that looks like a theme
+        local candidate
+        candidate=$(find "$temp_dir" -maxdepth 2 -name "index.theme" -type f | head -1 | xargs dirname)
+        if [[ -d "$candidate" ]]; then
+            sudo cp -r "$candidate" "$theme_dir"
+        fi
+    fi
+    rm -rf "$temp_dir"
+
+    # Apply the theme system-wide
+    if command_exists gsettings; then
+        gsettings set org.gnome.desktop.interface gtk-theme "Catppuccin-Mocha" 2>/dev/null || true
+        gsettings set org.gnome.desktop.interface color-scheme "prefer-dark" 2>/dev/null || true
+    fi
+
+    log_ok "Catppuccin Mocha GTK theme installed and applied"
+}
+
+install_catppuccin_gtk_manual() {
+    # Fallback: clone and build from source
+    log_info "Installing Catppuccin GTK from source..."
+    local theme_dir="/usr/share/themes/Catppuccin-Mocha"
+    if [[ -d "$theme_dir" ]]; then
+        log_ok "Catppuccin GTK theme already exists"
+        return
+    fi
+
+    local temp_dir
+    temp_dir=$(mktemp -d)
+    git clone --depth 1 https://github.com/catppuccin/gtk.git "$temp_dir/gtk-theme" 2>/dev/null || {
+        log_warn "Could not clone Catppuccin GTK repo. Skipping GTK theme."
+        rm -rf "$temp_dir"
+        return
+    }
+
+    cd "$temp_dir/gtk-theme"
+    if command_exists meson; then
+        meson setup build --prefix=/usr -Dmocha=true -Dlavender=true -Daccents=blue 2>/dev/null && \
+            ninja -C build && sudo ninja -C build install 2>/dev/null && \
+            sudo mv /usr/share/themes/Catppuccin-Mocha-Lavender-Blue-Dark "$theme_dir" 2>/dev/null
+    else
+        sudo apt install -y meson sassc
+        meson setup build --prefix=/usr -Dmocha=true -Dlavender=true -Daccents=blue 2>/dev/null && \
+            ninja -C build && sudo ninja -C build install 2>/dev/null && \
+            sudo mv /usr/share/themes/Catppuccin-Mocha-Lavender-Blue-Dark "$theme_dir" 2>/dev/null
+    fi
+
+    cd - > /dev/null
+    rm -rf "$temp_dir"
+
+    if command_exists gsettings; then
+        gsettings set org.gnome.desktop.interface gtk-theme "Catppuccin-Mocha" 2>/dev/null || true
+        gsettings set org.gnome.desktop.interface color-scheme "prefer-dark" 2>/dev/null || true
+    fi
+
+    log_ok "Catppuccin Mocha GTK theme installed (from source)"
+}
+
+# =============================================================================
+# 21. Catppuccin Icon Theme (system-wide)
+# =============================================================================
+
+install_catppuccin_icons() {
+    local icon_dir="/usr/share/icons/Catppuccin"
+    if [[ -d "$icon_dir" ]]; then
+        log_ok "Catppuccin icon theme already installed"
+        return
+    fi
+    log_info "Installing Catppuccin icon theme system-wide..."
+
+    local temp_dir
+    temp_dir=$(mktemp -d)
+    curl -fsSL "https://github.com/catppuccin/cursors/releases/latest/download/Catppuccin-Mocha-Lavender-Cursors.tar.gz" \
+        -o "$temp_dir/cursors.tar.gz" 2>/dev/null || {
+        log_warn "Could not download Catppuccin cursors. Skipping."
+        rm -rf "$temp_dir"
+        return
+    }
+
+    sudo mkdir -p "$icon_dir"
+    tar -xzf "$temp_dir/cursors.tar.gz" -C "$icon_dir" --strip-components=1 2>/dev/null || \
+        tar -xzf "$temp_dir/cursors.tar.gz" -C "$icon_dir" 2>/dev/null
+    rm -rf "$temp_dir"
+
+    if command_exists gsettings; then
+        gsettings set org.gnome.desktop.interface icon-theme "Catppuccin" 2>/dev/null || true
+        gsettings set org.gnome.desktop.interface cursor-theme "Catppuccin-Mocha-Lavender-Cursors" 2>/dev/null || true
+    fi
+
+    log_ok "Catppuccin icon/cursor theme installed"
+}
+
+# =============================================================================
+# 22. VSCode Catppuccin Theme
+# =============================================================================
+
+install_vscode_catppuccin() {
+    if ! command_exists code; then
+        log_warn "VSCode not installed. Skipping VSCode theme."
+        return
+    fi
+    log_info "Installing Catppuccin theme for VSCode..."
+    # Check if already installed
+    if code --list-extensions 2>/dev/null | grep -q "catppuccin.catppuccin-vsc"; then
+        log_ok "Catppuccin VSCode theme already installed"
+        return
+    fi
+    code --install-extension catppuccin.catppuccin-vsc 2>/dev/null || {
+        log_warn "Could not install Catppuccin VSCode theme. Install manually."
+        return
+    }
+
+    # Set as active theme
+    local vscode_dir="$HOME/.config/Code/User"
+    mkdir -p "$vscode_dir"
+    local settings="$vscode_dir/settings.json"
+    if [[ -f "$settings" ]]; then
+        # Add theme settings if not present
+        if ! grep -q "workbench.colorCustomizations" "$settings" 2>/dev/null; then
+            # Use python3 or jq to safely modify JSON
+            if command_exists python3; then
+                python3 -c "
+import json, sys
+with open('$settings', 'r') as f:
+    try:
+        data = json.load(f)
+    except:
+        data = {}
+data['workbench.colorTheme'] = 'Catppuccin Mocha'
+data['workbench.iconTheme'] = 'catppuccin-mocha'
+with open('$settings', 'w') as f:
+    json.dump(data, f, indent=2)
+" 2>/dev/null
+            fi
+        fi
+    else
+        cat > "$settings" << 'EOF'
+{
+  "workbench.colorTheme": "Catppuccin Mocha",
+  "workbench.iconTheme": "catppuccin-mocha"
+}
+EOF
+    fi
+
+    log_ok "Catppuccin VSCode theme installed and activated"
+}
+
+# =============================================================================
+# 23. Firefox/Brave Catppuccin Theme
+# =============================================================================
+
+install_browser_catppuccin() {
+    log_info "Installing Catppuccin themes for browsers..."
+
+    # Firefox userChrome.css for Catppuccin
+    local firefox_dir="$HOME/.mozilla/firefox"
+    if [[ -d "$firefox_dir" ]]; then
+        local profile
+        profile=$(find "$firefox_dir" -maxdepth 1 -name "*.default*" -type d | head -1)
+        if [[ -n "$profile" ]]; then
+            local chrome_dir="$profile/chrome"
+            mkdir -p "$chrome_dir"
+            log_ok "Firefox profile found. Add Catppuccin userChrome.css manually from https://github.com/catppuccin/firefox"
+        fi
+    fi
+
+    # Brave/Chrome: install Catppuccin extension
+    if command_exists brave-browser; then
+        log_info "To add Catppuccin to Brave, install: https://chrome.google.com/webstore/detail/catppuccin-mocha-theme"
+    fi
+
+    log_ok "Browser theme instructions provided"
+}
+
+# =============================================================================
+# 24. System-wide GTK/Qt dark mode settings
+# =============================================================================
+
+apply_system_dark_mode() {
+    log_info "Applying system-wide dark mode..."
+
+    if command_exists gsettings; then
+        gsettings set org.gnome.desktop.interface color-scheme "prefer-dark" 2>/dev/null || true
+        gsettings set org.gnome.desktop.interface gtk-theme "Catppuccin-Mocha" 2>/dev/null || true
+        gsettings set org.gnome.desktop.interface font-name "JetBrainsMono Nerd Font 11" 2>/dev/null || true
+        gsettings set org.gnome.desktop.interface monospace-font-name "JetBrainsMono Nerd Font 14" 2>/dev/null || true
+        gsettings set org.gnome.desktop.interface document-font-name "JetBrainsMono Nerd Font 11" 2>/dev/null || true
+        log_ok "GNOME dark mode and fonts applied"
+    fi
+
+    # Qt5/Qt6 dark mode
+    if [[ -f "$HOME/.config/qt5ct/qt5ct.conf" ]] || command_exists qt5ct; then
+        mkdir -p "$HOME/.config/qt5ct"
+        cat > "$HOME/.config/qt5ct/qt5ct.conf" << 'EOF'
+[Appearance]
+style=gtk2
+color_scheme=catppuccin_mocha
+icon_theme=Catppuccin
+EOF
+        log_ok "Qt5 dark mode configured"
+    fi
+
+    # Set QT_QPA_PLATFORMTHEME for Qt apps to use GTK theme
+    if ! grep -q "QT_QPA_PLATFORMTHEME" "$HOME/.profile" 2>/dev/null; then
+        echo 'export QT_QPA_PLATFORMTHEME=gtk3' >> "$HOME/.profile"
+        log_ok "Qt platform theme set to gtk3"
+    fi
+
+    log_ok "System-wide dark mode applied"
+}
+
+# =============================================================================
+# 25. Symlink Dotfiles
 # =============================================================================
 
 symlink_dotfiles() {
@@ -574,7 +837,12 @@ main() {
     install_power_tools
     install_cli_tools
     install_nerd_font
+    install_catppuccin_gtk
+    install_catppuccin_icons
+    install_vscode_catppuccin
+    install_browser_catppuccin
     customize_gnome_terminal
+    apply_system_dark_mode
     symlink_dotfiles
 
     echo ""
@@ -586,6 +854,7 @@ main() {
     log_info "Run 'nvim' to initialize LazyVim plugins"
     log_info "Run 'graphify install --platform opencode' to register Graphify"
     log_info "Consider changing your default shell: chsh -s \$(which zsh)"
+    log_info "Restart your session (logout/login) for system-wide theme changes to take full effect"
     echo ""
 }
 
