@@ -43,7 +43,7 @@ keybinds clear-defaults=true {
 		bind "z" { ToggleFocusFullscreen; SwitchToMode "Normal"; }
 		bind "f" { TogglePaneFrames; SwitchToMode "Normal"; }
 		bind "w" { ToggleFloatingPanes; SwitchToMode "Normal"; }
-		bind "Ctrl a" { ToggleFloatingPanes; SwitchToMode "Normal"; }
+		// bind "Ctrl a" { ToggleFloatingPanes; SwitchToMode "Normal"; }
 		bind "e" { TogglePaneEmbedOrFloating; SwitchToMode "Normal"; }
 		bind "r" { SwitchToMode "RenamePane"; PaneNameInput 0;}
 	}
@@ -111,7 +111,7 @@ keybinds clear-defaults=true {
 	}
 	session {
 		bind "Ctrl x" { SwitchToMode "Normal"; }
-		bind "Ctrl x" { SwitchToMode "Scroll"; }
+		// bind "Ctrl x" { SwitchToMode "Scroll"; }
 		bind "d" { Detach; }
 		bind "w" {
 		    LaunchOrFocusPlugin "zellij:session-manager" {

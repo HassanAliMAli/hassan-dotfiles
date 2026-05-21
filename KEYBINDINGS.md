@@ -29,6 +29,86 @@
 | `fcd` | Fuzzy-find a directory and cd into it |
 | `f` | Fuzzy-find a file and copy its path to clipboard |
 | `fv` | Fuzzy-find a file and open in Neovim |
+| `rr` | Launch ranger file manager (cds on exit) |
+
+### Aliases
+| Alias | Expands To |
+|-------|-----------|
+| `la` | `tree` |
+| `cat` | `bat` (syntax-highlighted cat) |
+| `l` | `eza -l --icons --git -a` |
+| `lt` | `eza --tree --level=2 --long --icons --git` |
+| `ltree` | `eza --tree --level=2 --icons --git` |
+| `v` | `nvim` |
+| `cl` | `clear` |
+| `http` | `xh` (HTTP client) |
+| `nm` | `nmap -sC -sV -oN nmap` |
+
+#### Directory Navigation
+| Alias | Action |
+|-------|--------|
+| `..` | `cd ..` |
+| `...` | `cd ../..` |
+| `....` | `cd ../../..` |
+| `.....` | `cd ../../../..` |
+| `......` | `cd ../../../../..` |
+
+#### Git
+| Alias | Action |
+|-------|--------|
+| `gc` | `git commit -m` |
+| `gca` | `git commit -a -m` |
+| `gp` | `git push origin HEAD` |
+| `gpu` | `git pull origin` |
+| `gst` | `git status` |
+| `glog` | Formatted graph log |
+| `gdiff` | `git diff` |
+| `gco` | `git checkout` |
+| `gb` | `git branch` |
+| `gba` | `git branch -a` |
+| `gadd` | `git add` |
+| `ga` | `git add -p` (interactive) |
+| `gcoall` | `git checkout -- .` (discard all) |
+| `gr` | `git remote` |
+| `gre` | `git reset` |
+
+#### Docker
+| Alias | Action |
+|-------|--------|
+| `dco` | `docker compose` |
+| `dps` | `docker ps` |
+| `dpa` | `docker ps -a` |
+| `dl` | `docker ps -l -q` (latest container ID) |
+| `dx` | `docker exec -it` |
+
+#### Kubernetes
+| Alias | Action |
+|-------|--------|
+| `k` | `kubectl` |
+| `ka` | `kubectl apply -f` |
+| `kg` | `kubectl get` |
+| `kd` | `kubectl describe` |
+| `kdel` | `kubectl delete` |
+| `kl` | `kubectl logs -f` |
+| `kgpo` | `kubectl get pod` |
+| `kgd` | `kubectl get deployments` |
+| `kc` | `kubectx` |
+| `kns` | `kubens` |
+| `ke` | `kubectl exec -it` |
+| `kcns` | `kubectl config set-context --current --namespace` |
+
+> **Note:** `kl` is defined twice in `.zshrc` (lines 92, 97). The second definition (`kubectl logs -f`) wins.
+
+#### Security
+| Alias | Action |
+|-------|--------|
+| `gobust` | `gobuster dir` with wordlist |
+| `dirsearch` | `python dirsearch.py` with wordlist |
+| `massdns` | Mass DNS enumeration |
+| `server` | `python -m http.server 4445` |
+| `tunnel` | `ngrok http 4445` |
+| `fuzz` | `ffuf` with SecLists wordlist |
+| `gr` | `gf` (pattern grep by tomnomnom) |
 
 ---
 
@@ -77,6 +157,7 @@
 | `Ctrl+K` | Delete to end of line |
 | `Ctrl+U` | Delete from start of line |
 | `Alt+Backspace` | Delete one word backward |
+| `Alt+M` | Delete one word backward (emacs) |
 | `Alt+D` | Delete word forward |
 
 ### Clipboard
@@ -97,6 +178,13 @@
 | `Alt+C` | Capitalize character |
 | `Ctrl+T` | Swap adjacent characters |
 
+### Custom Commands
+| Command | Action |
+|---------|--------|
+| `tp` | Toggle between full Starship prompt and minimal prompt |
+| `cx <dir>` | Change directory and list contents |
+| `ff` | Fuzzy-find Aerospace windows and focus |
+
 ### Aliases
 | Alias | Expands To |
 |-------|-----------|
@@ -108,6 +196,40 @@
 | `as` | `aerospace` |
 | `asr` | `atuin scripts run` |
 | `oc` | `opencode` |
+
+#### Git
+| Alias | Action |
+|-------|--------|
+| `gc` | `git commit -m` |
+| `gca` | `git commit -a -m` |
+| `gp` | `git push origin HEAD` |
+| `gpu` | `git pull origin` |
+| `gst` | `git status` |
+| `glog` | Formatted graph log |
+| `gdiff` | `git diff` |
+| `gco` | `git checkout` |
+| `gb` | `git branch` |
+| `gba` | `git branch -a` |
+| `gadd` | `git add` |
+| `ga` | `git add -p` (interactive) |
+| `gcoall` | `git checkout -- .` (discard all) |
+| `gr` | `git remote` |
+| `gre` | `git reset` |
+
+#### Kubernetes
+| Alias | Action |
+|-------|--------|
+| `k` | `kubectl` |
+| `ka` | `kubectl apply -f` |
+| `kg` | `kubectl get` |
+| `kd` | `kubectl describe` |
+| `kdel` | `kubectl delete` |
+| `kl` | `kubectl logs -f` |
+| `kgpo` | `kubectl get pod` |
+| `kgd` | `kubectl get deployments` |
+| `kc` | `kubectx` |
+| `kns` | `kubens` |
+| `ke` | `kubectl exec -it` |
 
 ---
 
@@ -155,7 +277,7 @@
 ### Pane Mode (`Ctrl+A`)
 | Shortcut | Action |
 |----------|--------|
-| `Ctrl+A` | Exit to normal |
+| `Ctrl+A` | Toggle floating panes + exit to normal |
 | `H` / `Left` | Move focus left |
 | `L` / `Right` | Move focus right |
 | `J` / `Down` | Move focus down |
@@ -169,6 +291,8 @@
 | `W` | Toggle floating panes |
 | `E` | Toggle pane embed/floating |
 | `R` | Rename pane |
+
+> **Note:** `Ctrl+A` in pane mode toggles floating panes AND exits (config line 46 overrides line 33). This appears unintentional — `W` already toggles floating panes.
 
 ### Resize Mode (`Ctrl+N`)
 | Shortcut | Action |
@@ -225,9 +349,29 @@
 | `W` | Toggle wrap |
 | `O` | Toggle whole word |
 
+### EnterSearch Mode
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+S` / `Esc` | Switch to Scroll mode |
+| `Enter` | Switch to Search mode |
+
+### RenameTab Mode
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+C` | Exit to Normal |
+| `Esc` | Undo rename, return to Tab mode |
+
+### RenamePane Mode
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+C` | Exit to Normal |
+| `Esc` | Undo rename, return to Pane mode |
+
 ### Session Mode (`Ctrl+X`)
 | Shortcut | Action |
 |----------|--------|
+| `Enter` / `Esc` | Exit to Normal (shared binding) |
+| `Ctrl+X` | Switch to Scroll mode (config line 114 overrides line 113) |
 | `D` | Detach |
 | `W` | Session manager (floating) |
 
@@ -380,6 +524,8 @@
 | `<leader>R` | Redo |
 | `<leader>H` | Toggle conceal / tips |
 
+> **Note:** Both `messages_toggle_conceal` and `tips_toggle` are mapped to `<leader>h` in `tui.json`. Only one will fire.
+
 ### Models & Agents
 | Shortcut | Action |
 |----------|--------|
@@ -410,6 +556,7 @@
 | `Alt+B` / `Ctrl+Left` | Word backward |
 | `Ctrl+W` / `Ctrl+Backspace` | Delete word backward |
 | `Alt+D` | Delete word forward |
+| `Ctrl+Z` | Suspend terminal |
 | `Up` / `Down` | History previous/next |
 
 ---
@@ -435,6 +582,17 @@
 | `Shift+Ctrl+U` | Normal | Scroll messages half page up |
 | `Shift+Ctrl+D` | Normal | Scroll messages half page down |
 | `<leader>os` | Normal/Visual | Select prompt type |
+
+### mini.surround
+| Shortcut | Mode | Action |
+|----------|------|--------|
+| `sa` | Normal/Visual | Add surrounding quotes/brackets |
+| `sd` | Normal | Delete surrounding quotes/brackets |
+| `gsf` | Normal | Find surrounding pair |
+| `gsF` | Normal | Find surrounding pair (left) |
+| `gsh` | Normal | Highlight surrounding pair |
+| `gsr` | Normal | Replace surrounding pair |
+| `gsn` | Normal | Update N lines |
 
 > LazyVim provides many more default keymaps. See `:help lazyvim` inside Neovim.
 
