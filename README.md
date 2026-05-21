@@ -109,35 +109,85 @@ That's it. The script will:
 
 ### After the Script Runs
 
+These steps are required to finish the setup. The script installs everything but cannot do these automatically:
+
 ```bash
-# Change your default shell to Zsh
+# 1. Change your default shell to Zsh
 chsh -s $(which zsh)
 
-# Open Neovim to download all plugins (first run will take a moment)
+# 2. Open Neovim to download all plugins (first run will take a moment)
 nvim
 
-# Log in to GitHub CLI
+# 3. Log in to GitHub CLI
 gh auth login
 
-# Register Graphify with OpenCode
+# 4. Register Graphify with OpenCode
 graphify install --platform opencode
 
-# Restart your session (logout and back in) for theme changes to fully apply
+# 5. Restart your session (logout and back in) for theme changes to fully apply
 ```
 
-### Tools Not Installed by the Script
+### Switching to Nushell as Default Shell
 
-These tools have their configs symlinked but need to be installed separately:
+If you prefer Nushell over Zsh, you need two steps (the script can't do this because it requires sudo and could lock you out if something goes wrong):
 
-| Tool | Why It's Not Installed | Install It With |
-|------|----------------------|-----------------|
-| **Starship** | Needs Rust/cargo or curl install | `curl -sS https://starship.rs/install.sh \| sh` |
-| **Zellij** | No stable Ubuntu PPA | `cargo install zellij` or see [zellij.dev](https://zellij.dev) |
-| **Television** | Still in active development | `cargo install television` or see [GitHub](https://github.com/alexpasmantier/television) |
-| **Atuin** | Needs curl install | `curl --proto '=https' --tlsv1.2 -LsSf https://setup.atuin.sh \| sh` |
-| **direnv** | Not in the install list | `sudo apt install -y direnv` then add `eval "$(direnv hook zsh)"` |
+```bash
+# Add nushell to the list of allowed shells
+echo $(which nu) | sudo tee -a /etc/shells
 
-Their configs are already in place — just install the binary and they'll pick up the settings automatically.
+# Change your default shell
+chsh -s $(which nu)
+```
+
+Then **log out and log back in** for the change to take effect.
+
+---
+
+## Important Things to Know
+
+### The Script Does Not Change Your Default Shell
+It installs Zsh and Nushell but leaves your current shell unchanged. You must run `chsh -s $(which zsh)` yourself. This is intentional — if the script changes your shell and something breaks, you could lose terminal access.
+
+### Theme Changes Need a Logout
+GTK themes, fonts, and system-wide dark mode are set in config files, but running apps won't pick them up until you restart. **Log out and log back in** to see the full Catppuccin Mocha theme everywhere.
+
+### Neovim Needs One Manual Run
+The script sets up the LazyVim config, but the first time you open `nvim`, it downloads all plugins. This takes a few minutes. Don't close the window while it's installing.
+
+### Symlinks Mean Edit Once, Apply Everywhere
+All config files are symlinks pointing to this repo. When you edit a file inside `hassan-dotfiles/`, the change is live immediately — no need to copy or run anything. Just edit, save, and it's applied.
+
+### Running the Script Again Is Safe
+The script is **idempotent**. Every install function checks if the tool already exists before installing. Run it 100 times — it will only skip, never break or duplicate anything.
+
+### Some Tools Need Manual Install
+These have their configs symlinked but the script can't install them automatically (no stable package source). Install them yourself and they'll pick up the settings:
+
+| Tool | What It Does | Install It With |
+|------|-------------|-----------------|
+| **Starship** | Beautiful command prompt | `curl -sS https://starship.rs/install.sh \| sh` |
+| **Zellij** | Terminal panes and tabs | `cargo install zellij` or see [zellij.dev](https://zellij.dev) |
+| **Television** | Fuzzy finder (`Ctrl+T`) | `cargo install television` or see [GitHub](https://github.com/alexpasmantier/television) |
+| **Atuin** | Supercharged history (`Ctrl+R`) | `curl --proto '=https' --tlsv1.2 -LsSf https://setup.atuin.sh \| sh` |
+| **direnv** | Auto-load env vars per project | `sudo apt install -y direnv` then run `direnv allow` in projects |
+
+### direnv Needs Approval Per Project
+After installing direnv, it won't load any `.envrc` file until you explicitly approve it. When you enter a project directory with a `.envrc`, you'll see a warning. Run `direnv allow` to trust it.
+
+### Ghostty and WezTerm Are Both Installed
+You have two terminal emulators. Pick one as your default. Both are themed with Catppuccin Mocha and use JetBrainsMono Nerd Font.
+
+### Obsidian Is an AppImage
+It installs to `~/.local/bin/Obsidian.AppImage`. To add it to your app menu, create a `.desktop` file or run it directly from the terminal with `Obsidian.AppImage`.
+
+### SSH Config Is Managed Here
+`~/.ssh/config` is a symlink to this repo. If you need to add personal SSH keys or host entries, edit `ssh/config` in this repo and commit the change. Your SSH keys (`id_rsa`, `id_ed25519`, etc.) are **not** in this repo — they stay in `~/.ssh/` and are never tracked by Git.
+
+### Nushell Runtime Files Are Ignored by Git
+`nushell/vendor/` and `nushell/history.txt` are in `.gitignore`. These are generated by Nushell at runtime and contain your command history and autoloaded scripts. They're unique to your machine.
+
+### OpenCode Runtime Files Are Ignored by Git
+`opencode/node_modules/`, `opencode/package.json`, `opencode/AGENTS.md`, and `opencode/opencode.jsonc` are in `.gitignore`. These are installed by OpenCode itself and are machine-specific.
 
 ---
 
