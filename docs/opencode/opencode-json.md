@@ -1,7 +1,7 @@
 # OpenCode Configuration — Documentation
 
-**Location:** `opencode/opencode.json` → `~/.config/opencode/opencode.json`  
-**Purpose:** Main configuration file for the OpenCode AI assistant
+**Location:** `ai/opencode.json` (also accessible at `opencode/opencode.json` via symlink) → `~/.config/opencode/opencode.json`  
+**Purpose:** Main configuration file for the OpenCode AI assistant. Lives in the shared `ai/` folder so the same `.stowrc`-style symlink chain works for both OpenCode and Gemini CLI.
 
 ## Line-by-Line Explanation
 

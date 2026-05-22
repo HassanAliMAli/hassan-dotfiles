@@ -14,13 +14,26 @@ hassan-dotfiles/
 ├── .stowrc             # Rules for the stow symlink tool
 ├── README.md           # Quick start guide
 ├── setup.sh            # One-command installation script
+├── AGENTS.md           # AI coding rules (opencode auto-discovers)
+├── GEMINI.md           # AI coding rules (Gemini CLI auto-discovers)
+├── ai/                 # 🆕 AI-agent-agnostic shared config folder
+│   ├── opencode.json   #   OpenCode main config
+│   ├── opencode.jsonc  #   OpenCode MCP server config
+│   ├── tui.json        #   OpenCode terminal UI keybindings
+│   ├── settings.json   #   Gemini CLI settings (MCP servers)
+│   ├── agent/          #   OpenCode custom agents
+│   ├── command/        #   OpenCode custom commands
+│   ├── skills/         #   Shared skills (opencode + Gemini)
+│   ├── node_modules/   #   MCP server dependencies
+│   └── package.json    #   MCP server deps
+├── opencode → ai/      # Symlink (so ~/.config/opencode/ → opencode/ → ai/)
+├── .opencode/          # OpenCode project-level config
 ├── atuin/              # Shell history manager config
 ├── gh-dash/            # GitHub dashboard config
 ├── ghostty/            # Ghostty terminal config
 ├── nix/                # Nix package manager config
 ├── nushell/            # Nushell shell config
 ├── nvim/               # Neovim text editor config (LazyVim)
-├── opencode/           # OpenCode AI assistant config
 ├── ssh/                # SSH connection config
 ├── starship/           # Cross-shell prompt theme
 ├── television/         # Fuzzy finder tool config
@@ -33,7 +46,9 @@ hassan-dotfiles/
 
 This project uses **GNU Stow**, a symlink manager. When you run `stow .` in this directory, it creates symbolic links (shortcuts) from each config file to the correct location on your system. For example, `nushell/config.nu` gets linked to `~/.config/nushell/config.nu`.
 
-The `.stowrc` file configures Stow's behavior: it targets `~/.config` and ignores `zshrc/`, `ssh/`, and `docs/` (these are symlinked separately by the setup script).
+The `.stowrc` file configures Stow's behavior: it targets `~/.config` and ignores `zshrc/`, `ssh/`, `docs/`, `opencode/`, and `ai/` (these are symlinked separately by the setup script).
+
+> **Note:** The `opencode/` directory is now a symlink to `ai/` — the AI-agent-agnostic shared config folder. Both OpenCode and Gemini CLI share this folder. Skills in `ai/skills/` are available to both tools. Only `AGENTS.md` and `GEMINI.md` at the repo root remain tool-specific.
 
 ## Quick Start
 
@@ -132,8 +147,8 @@ Each configuration file has its own detailed documentation page in the correspon
 - [`nushell/config.nu`](nushell/config-nu.md) — Nushell main config (colors, menus, keybindings)
 - [`nushell/env.nu`](nushell/env-nu.md) — Nushell environment config (prompt, PATH)
 - [`nvim/init.lua`](nvim/init-lua.md) — Neovim editor (LazyVim, Catppuccin, OpenCode)
-- [`opencode/opencode.json`](opencode/opencode-json.md) — OpenCode AI main config
-- [`opencode/tui.json`](opencode/tui-json.md) — OpenCode AI terminal UI keybindings
+- [`ai/opencode.json`](opencode/opencode-json.md) — OpenCode AI main config (accessible via `opencode/opencode.json`)
+- [`ai/tui.json`](opencode/tui-json.md) — OpenCode AI terminal UI keybindings (accessible via `opencode/tui.json`)
 - [`ssh/config`](ssh/config.md) — SSH connection shortcuts and settings
 - [`starship/starship.toml`](starship/starship-toml.md) — Cross-shell prompt theme
 - [`television/config.toml`](television/config-toml.md) — Fuzzy finder tool

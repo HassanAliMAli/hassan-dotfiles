@@ -1,7 +1,7 @@
 # OpenCode TUI Configuration — Documentation
 
-**Location:** `opencode/tui.json` → `~/.config/opencode/tui.json`  
-**Purpose:** Configures the OpenCode AI assistant terminal UI, including all keyboard shortcuts
+**Location:** `ai/tui.json` (also accessible at `opencode/tui.json` via symlink) → `~/.config/opencode/tui.json`  
+**Purpose:** Configures the OpenCode AI assistant terminal UI, including all keyboard shortcuts. Lives in the shared `ai/` folder.
 
 ## What Is OpenCode?
 

@@ -376,6 +376,39 @@ install_gemini_cli() {
     log_ok "Gemini CLI installed"
 }
 
+setup_gemini_config() {
+    local script_dir
+    script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    log_info "Configuring Gemini CLI to use shared ai/ config..."
+
+    # Symlink Gemini settings.json to repo (MCP servers, etc.)
+    if [[ -L "$HOME/.gemini/settings.json" ]]; then
+        ln -sf "$script_dir/ai/settings.json" "$HOME/.gemini/settings.json"
+    elif [[ -f "$HOME/.gemini/settings.json" ]]; then
+        if ! diff -q "$HOME/.gemini/settings.json" "$script_dir/ai/settings.json" &>/dev/null; then
+            log_info "Backing up existing ~/.gemini/settings.json..."
+            cp "$HOME/.gemini/settings.json" "$HOME/.gemini/settings.json.bak.$(date +%s)"
+        fi
+        ln -sf "$script_dir/ai/settings.json" "$HOME/.gemini/settings.json"
+    fi
+
+    # Link skills from ai/skills/
+    if command_exists gemini; then
+        for skill_dir in "$script_dir/ai/skills"/*/; do
+            if [[ -d "$skill_dir" && -f "$skill_dir/SKILL.md" ]]; then
+                local skill_name
+                skill_name=$(basename "$skill_dir")
+                if ! gemini skills list --all 2>/dev/null | grep -q "^$skill_name "; then
+                    log_info "  Linking Gemini skill: $skill_name"
+                    gemini skills link --consent "$skill_dir" 2>/dev/null || true
+                fi
+            fi
+        done
+    fi
+
+    log_ok "Gemini CLI config linked to ai/"
+}
+
 # =============================================================================
 # 17. OpenCode CLI
 # =============================================================================
@@ -932,7 +965,10 @@ symlink_dotfiles() {
     for dir in atuin gh-dash ghostty nix nushell nvim opencode starship television wezterm zellij; do
         local target="$HOME/.config/$dir"
         local source="$script_dir/$dir"
-        if [[ -d "$target" && ! -L "$target" ]]; then
+        if [[ -L "$target" ]]; then
+            # Update existing symlink
+            ln -sf "$source" "$target"
+        elif [[ -d "$target" && ! -L "$target" ]]; then
             # Move unique runtime files aside, symlink, move back
             local tmpdir
             tmpdir=$(mktemp -d)
@@ -953,7 +989,7 @@ symlink_dotfiles() {
                 cp -a "$f" "$target/" 2>/dev/null || true
             done
             rm -rf "$tmpdir"
-        elif [[ ! -e "$target" && ! -L "$target" && -d "$source" ]]; then
+        elif [[ ! -e "$target" && -d "$source" ]]; then
             ln -sf "$source" "$target"
         fi
     done
@@ -1035,6 +1071,7 @@ main() {
     customize_gnome_terminal
     apply_system_dark_mode
     symlink_dotfiles
+    setup_gemini_config
 
     echo ""
     echo -e "${GREEN}========================================${NC}"

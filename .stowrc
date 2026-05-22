@@ -4,3 +4,5 @@
 --ignore=zshrc
 --ignore=ssh
 --ignore=docs
+--ignore=opencode
+--ignore=ai
