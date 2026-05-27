@@ -3,6 +3,11 @@
     "default": "gemini-3.1-pro-preview",
     "contexts": []
   },
+  "agents": {
+    "overrides": {
+      "generalist": { "enabled": false }
+    }
+  },
   "temperature": 0.7,
   "topP": 0.95,
   "topK": 40,
