@@ -379,34 +379,33 @@ install_gemini_cli() {
 setup_gemini_config() {
     local script_dir
     script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-    log_info "Configuring Gemini CLI to use shared ai/ config..."
+    local gemini_root="$HOME/.gemini"
+    local repo_gemini="$script_dir/ai/gemini"
+    
+    log_info "Configuring Gemini CLI from ai/gemini..."
+    mkdir -p "$gemini_root"
 
-    # Symlink Gemini settings.json to repo (MCP servers, etc.)
-    if [[ -L "$HOME/.gemini/settings.json" ]]; then
-        ln -sf "$script_dir/ai/settings.json" "$HOME/.gemini/settings.json"
-    elif [[ -f "$HOME/.gemini/settings.json" ]]; then
-        if ! diff -q "$HOME/.gemini/settings.json" "$script_dir/ai/settings.json" &>/dev/null; then
-            log_info "Backing up existing ~/.gemini/settings.json..."
-            cp "$HOME/.gemini/settings.json" "$HOME/.gemini/settings.json.bak.$(date +%s)"
-        fi
-        ln -sf "$script_dir/ai/settings.json" "$HOME/.gemini/settings.json"
-    fi
+    # Files/Folders to link from repo to ~/.gemini
+    # We link specific items to avoid overwriting local state like history/creds
+    local items=("GEMINI.md" "settings.json" "agents" "skills")
 
-    # Link skills from ai/skills/
-    if command_exists gemini; then
-        for skill_dir in "$script_dir/ai/skills"/*/; do
-            if [[ -d "$skill_dir" && -f "$skill_dir/SKILL.md" ]]; then
-                local skill_name
-                skill_name=$(basename "$skill_dir")
-                if ! gemini skills list --all 2>/dev/null | grep -q "^$skill_name "; then
-                    log_info "  Linking Gemini skill: $skill_name"
-                    gemini skills link --consent "$skill_dir" 2>/dev/null || true
-                fi
+    for item in "${items[@]}"; do
+        local target="$gemini_root/$item"
+        local source="$repo_gemini/$item"
+        
+        if [[ -e "$source" ]]; then
+            if [[ -L "$target" ]]; then
+                ln -sf "$source" "$target"
+            elif [[ -e "$target" ]]; then
+                mv "$target" "$target.bak.$(date +%s)"
+                ln -sf "$source" "$target"
+            else
+                ln -sf "$source" "$target"
             fi
-        done
-    fi
+        fi
+    done
 
-    log_ok "Gemini CLI config linked to ai/"
+    log_ok "Gemini CLI config linked to ai/gemini"
 }
 
 # =============================================================================
@@ -962,7 +961,7 @@ symlink_dotfiles() {
     stow --adopt -R . 2>/dev/null || true
 
     # Force symlink any real directories that stow couldn't adopt
-    for dir in atuin gh-dash ghostty nix nushell nvim opencode starship television wezterm zellij; do
+    for dir in atuin gh-dash ghostty nix nushell nvim starship television wezterm zellij; do
         local target="$HOME/.config/$dir"
         local source="$script_dir/$dir"
         if [[ -L "$target" ]]; then
@@ -993,6 +992,20 @@ symlink_dotfiles() {
             ln -sf "$source" "$target"
         fi
     done
+
+    # OpenCode config (nested in ai/ folder)
+    local opencode_target="$HOME/.config/opencode"
+    local opencode_source="$script_dir/ai/opencode"
+    if [[ -d "$opencode_source" ]]; then
+        if [[ -L "$opencode_target" ]]; then
+            ln -sf "$opencode_source" "$opencode_target"
+        elif [[ -d "$opencode_target" ]]; then
+            mv "$opencode_target" "${opencode_target}.bak.$(date +%s)"
+            ln -sf "$opencode_source" "$opencode_target"
+        else
+            ln -sf "$opencode_source" "$opencode_target"
+        fi
+    fi
 
     # Zsh config to home directory (~/.zshrc)
     if [[ -f "$script_dir/zshrc/.zshrc" ]]; then
