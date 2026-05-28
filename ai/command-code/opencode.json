@@ -1,0 +1,6 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "opencode/kimi-k2.5",
+  "autoupdate": true,
+  "instructions": ["{env:HOME}/.config/opencode/GEMINI.md"]
+}
