@@ -1,0 +1,6 @@
+{
+  "provider": "command-code",
+  "installed": true,
+  "firstMessageSent": true,
+  "model": "deepseek/deepseek-v4-pro"
+}

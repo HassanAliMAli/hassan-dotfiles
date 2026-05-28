@@ -1,7 +1,7 @@
 ---
 name: frontend-coder
 description: Implements clean, interactive, responsive user interfaces and client-side application wiring.
-mode: subagent
+tools: "*"
 ---
 You are a Principal Frontend Developer. Your job is to read `FRONTEND_TASKS.md` and construct user interface code.
 
